@@ -1,0 +1,164 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Home, Navigation } from 'lucide-react'
+import { KIND_ICON } from '@/components/kindStyle'
+import { LegRow } from '@/components/LegRow'
+import { MapView, type MapLine } from '@/components/MapView'
+import { cx } from '@/components/cls'
+import { useTimeline } from '@/components/useTimeline'
+import { useT } from '@/i18n/useT'
+import { googleMapsDirections } from '@/logic/geo'
+import { type IsoDate, formatDayLong, fromMinutes, nowMinutesInCph, todayInCph } from '@/logic/time'
+import { useActiveTrip } from '@/state/store'
+import { dayOf, tripDates } from '@/state/tripOps'
+import type { Trip } from '@/state/tripTypes'
+
+/** Re-render every minute so "next stop" moves on by itself. */
+function useNow() {
+  const [now, setNow] = useState(() => ({ date: todayInCph(), min: nowMinutesInCph() }))
+  useEffect(() => {
+    const id = setInterval(() => setNow({ date: todayInCph(), min: nowMinutesInCph() }), 60_000)
+    return () => clearInterval(id)
+  }, [])
+  return now
+}
+
+export default function Today() {
+  const { t, lang } = useT()
+  const trip = useActiveTrip()
+  const now = useNow()
+
+  if (!trip) {
+    return (
+      <div className="mx-auto max-w-xl p-4">
+        <p className="mb-3">{t('noActiveTrip')}</p>
+        <Link to="/plan">{t('goPlan')}</Link>
+      </div>
+    )
+  }
+
+  const dates = tripDates(trip)
+  if (!dates.includes(now.date)) {
+    const next = dates.find((d) => d > now.date && dayOf(trip, d).stops.length)
+    return (
+      <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
+        <p>{t('notInTrip', { name: trip.name })}</p>
+        {next && (
+          <p>
+            {t('nextDay', { day: formatDayLong(next, lang) })} –{' '}
+            <Link to={`/plan?d=${next}`}>{t('showTodayPlan')}</Link>
+          </p>
+        )}
+      </div>
+    )
+  }
+
+  return <TodayPlan trip={trip} date={now.date} nowMin={now.min} />
+}
+
+function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: number }) {
+  const { t, bi, lang } = useT()
+  const tl = useTimeline(trip, date)
+  // The next stop is the first one not yet left.
+  const nextIdx = tl.stops.findIndex((s) => s.leave > nowMin)
+
+  const lines = useMemo<MapLine[]>(
+    () =>
+      tl.stops.flatMap((s) => [
+        ...(s.leg ? [{ id: `${s.stopId}-leg`, coords: [s.leg.from, s.leg.to], style: s.leg.mode === 'walk' ? 'route' : 'transit' } as MapLine] : []),
+        ...(s.place.waypoints ? [{ id: `${s.stopId}-walk`, coords: s.place.waypoints, style: 'route' } as MapLine] : []),
+      ]),
+    [tl],
+  )
+  const dayPlaces = useMemo(() => tl.stops.map((s) => s.place), [tl.stops])
+  const badges = useMemo(() => new Map(tl.stops.map((s, i) => [s.place.id, String(i + 1)])), [tl.stops])
+  const next = nextIdx >= 0 ? tl.stops[nextIdx] : null
+  const fitPoints = useMemo(
+    () => (next ? [next.place.coords] : dayPlaces.map((p) => p.coords)),
+    [next, dayPlaces],
+  )
+
+  return (
+    <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
+      <h1 className="text-2xl font-bold first-letter:uppercase">{formatDayLong(date, lang)}</h1>
+
+      {tl.stops.length === 0 ? (
+        <p>
+          {t('emptyDay')} <Link to={`/plan?d=${date}`}>{t('goPlan')}</Link>
+        </p>
+      ) : (
+        <>
+          <MapView
+            className="h-[35dvh] w-full overflow-hidden rounded-xl"
+            places={dayPlaces}
+            selectedId={next?.place.id}
+            badges={badges}
+            home={trip.homeBase}
+            lines={lines}
+            fitPoints={fitPoints}
+            fitKey={`${date}:${nextIdx}`}
+          />
+
+          <ol className="flex flex-col">
+            {tl.stops.map((s, i) => {
+              const isNext = i === nextIdx
+              const isDone = nextIdx === -1 || i < nextIdx
+              return (
+                <li key={s.stopId}>
+                  {s.leg && <LegRow leg={s.leg} />}
+                  <div
+                    className={cx(
+                      'rounded-xl border p-4',
+                      isNext
+                        ? 'border-2 border-accent bg-accent/5 shadow-md'
+                        : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
+                      isDone && 'opacity-55',
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className={cx('grid size-9 shrink-0 place-items-center rounded-full font-bold text-white', isNext ? 'bg-accent' : 'bg-navy')}>
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        {isNext && <div className="text-sm font-bold tracking-wide text-accent uppercase">{t('nextStop')}</div>}
+                        <div className="text-lg leading-tight font-semibold">
+                          {KIND_ICON[s.place.kind]} {bi(s.place.name)}
+                        </div>
+                        <div className="text-slate-600 dark:text-slate-300">
+                          {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}
+                          {isDone && ` · ✓ ${t('done')}`}
+                        </div>
+                        {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
+                      </div>
+                    </div>
+                    {isNext && (
+                      <a
+                        href={googleMapsDirections(s.place.waypoints?.[0] ?? s.place.coords, undefined, s.leg?.mode === 'transit' ? 'transit' : 'walking')}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent text-lg font-semibold text-white no-underline"
+                      >
+                        <Navigation size={20} /> {t('navigate')}
+                      </a>
+                    )}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
+        </>
+      )}
+
+      {trip.homeBase && (
+        <a
+          href={googleMapsDirections(trip.homeBase.coords)}
+          target="_blank"
+          rel="noreferrer"
+          className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 no-underline dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        >
+          <Home size={18} /> {t('navigateHome')} ({trip.homeBase.label})
+        </a>
+      )}
+    </div>
+  )
+}

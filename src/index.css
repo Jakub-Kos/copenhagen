@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* Matches jakub-kos.github.io/WebPage: navy header, Inter/system font, accent #646cff, light/dark by system. */
+@theme {
+  --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --color-navy: #0b1220;
+  --color-navy-text: #e5f0ff;
+  --color-accent: #646cff;
+  --color-accent-strong: #535bf2;
+  --color-mustsee: #f5b301;
+  --color-indoor: #2563eb;
+  --color-covered: #d97706;
+  --color-outdoor: #16a34a;
+}
+
+/* In the base layer so Tailwind utilities (e.g. link colours) win over these defaults. */
+@layer base {
+  :root {
+    color-scheme: light dark;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    /* Slightly larger base size: the main users read on phones outdoors. */
+    font-size: 106.25%;
+    color: #172033;
+    background-color: #ffffff;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color: rgba(255, 255, 255, 0.9);
+      background-color: #242424;
+    }
+  }
+
+  html.large-text {
+    font-size: 125%;
+  }
+
+  body {
+    margin: 0;
+    min-width: 320px;
+  }
+
+  a {
+    color: var(--color-accent);
+    font-weight: 500;
+  }
+}
+
+/* Map markers (plain DOM elements handed to MapLibre). */
+.pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: #fff;
+  border: 3px solid var(--pin-color);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s;
+}
+.pin.must {
+  box-shadow: 0 0 0 3px var(--color-mustsee), 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.pin.selected {
+  transform: scale(1.35);
+  z-index: 2;
+}
+.pin.dim {
+  opacity: 0.35;
+}
+.pin .badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
+  border-radius: 9999px;
+  background: var(--color-navy);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+.pin.home {
+  --pin-color: var(--color-navy);
+  background: var(--color-navy);
+  color: #fff;
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
+}
