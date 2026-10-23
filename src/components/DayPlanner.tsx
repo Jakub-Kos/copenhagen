@@ -5,12 +5,14 @@ import { useT } from '@/i18n/useT'
 import { steps } from '@/logic/geo'
 import { suggestDay } from '@/logic/suggest'
 import { entryPoint, suggestLegMode } from '@/logic/timeline'
+import { fitFor } from '@/logic/weatherFit'
 import { optimizedOrder } from '@/services/valhalla'
 import { type IsoDate, fromMinutes } from '@/logic/time'
 import { useStore } from '@/state/store'
 import {
   addStop,
   dayOf,
+  tripDates,
   moveStop,
   moveStopTo,
   plannedPlaces,
@@ -27,7 +29,19 @@ import { Directions } from './Directions'
 import { MapView } from './MapView'
 import { Button, Field } from './ui'
 import { cx, inputCls } from './cls'
+import { useForecast } from './useForecast'
 import { useTimeline } from './useTimeline'
+import { WeatherHint } from './WeatherHint'
+import { WeatherStrip } from './WeatherStrip'
+
+type StopWarning = 'closed' | 'dark' | 'rain' | 'wind'
+
+const WARN_STYLE: Record<StopWarning, { icon: string; cls: string }> = {
+  closed: { icon: '⚠️', cls: 'text-red-600 dark:text-red-400' },
+  dark: { icon: '🌙', cls: 'text-amber-700 dark:text-amber-400' },
+  rain: { icon: '🌧️', cls: 'text-blue-700 dark:text-blue-300' },
+  wind: { icon: '💨', cls: 'text-amber-700 dark:text-amber-400' },
+}
 
 export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const { t, bi, lang } = useT()
@@ -35,6 +49,8 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const save = (next: Trip) => dispatch({ type: 'upsertTrip', trip: next })
   const day = dayOf(trip, date)
   const { tl, legRoute, walkRoute, lines } = useTimeline(trip, date)
+  const { forecast } = useForecast()
+  const dates = tripDates(trip)
   const [optimising, setOptimising] = useState(false)
   const [notice, setNotice] = useState<'optimiseFailed' | 'nothingFits' | null>(null)
   /** The trip before the last automatic change (suggest/optimise), for one-step undo. */
@@ -43,9 +59,9 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const [overId, setOverId] = useState<string | null>(null)
 
   const stopWarnings = useMemo(() => {
-    const m = new Map<string, ('closed' | 'dark')[]>()
+    const m = new Map<string, StopWarning[]>()
     for (const w of tl.warnings) {
-      if (w.kind === 'closed' || w.kind === 'dark') m.set(w.stopId, [...(m.get(w.stopId) ?? []), w.kind])
+      if ('stopId' in w) m.set(w.stopId, [...(m.get(w.stopId) ?? []), w.kind])
     }
     return m
   }, [tl.warnings])
@@ -86,6 +102,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
       maxDayHours: trip.maxDayHours,
       maxDayKm: trip.maxDayKm,
       transitThresholdKm: trip.transitThresholdKm,
+      extraScore: forecast ? (p, from, to) => fitFor(p, forecast, date, from, to)?.score ?? 0 : undefined,
     })
     if (!picks.length) return setNotice('nothingFits')
     saveWithUndo(picks.reduce((tr, p) => addStop(tr, date, p.placeId, p.legMode), trip))
@@ -120,6 +137,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   return (
     <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_1fr] md:items-start">
       <div className="flex flex-col gap-3">
+        <WeatherStrip date={date} />
         <div className="flex items-end gap-3">
           <Field label={t('startTime')}>
             <input
@@ -183,11 +201,13 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                       <div className="text-sm text-slate-600 dark:text-slate-300">
                         {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}
                       </div>
-                      {warns.includes('closed') && (
-                        <div className="text-sm font-medium text-red-600 dark:text-red-400">⚠️ {t('warn.closed')}</div>
-                      )}
-                      {warns.includes('dark') && (
-                        <div className="text-sm font-medium text-amber-700 dark:text-amber-400">🌙 {t('warn.dark')}</div>
+                      {warns.map((w) => (
+                        <div key={w} className={`text-sm font-medium ${WARN_STYLE[w].cls}`}>
+                          {WARN_STYLE[w].icon} {t(`warn.${w}`)}
+                        </div>
+                      ))}
+                      {(warns.includes('rain') || warns.includes('wind')) && (
+                        <WeatherHint place={s.place} date={date} dates={dates} />
                       )}
                       {s.place.waypoints && (() => {
                         const r = walkRoute(s.place)

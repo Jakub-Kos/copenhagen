@@ -8,6 +8,8 @@ import type { RouteEntry } from '@/state/routeStore'
 import { dayOf } from '@/state/tripOps'
 import type { DayPlan, Trip } from '@/state/tripTypes'
 import type { MapLine } from './MapView'
+import { fitFor } from '@/logic/weatherFit'
+import { useForecast } from './useForecast'
 import { type RouteSpec, useRoutes } from './useRoutes'
 
 export interface RoutedTimeline {
@@ -77,8 +79,10 @@ export function useRoutedTimeline(day: DayPlan, o: Omit<TimelineOptions, 'routes
 
 export function useTimeline(trip: Trip, date: IsoDate): RoutedTimeline {
   const day = dayOf(trip, date)
+  const { forecast } = useForecast()
   const o = useMemo(
     () => ({
+      weatherFor: forecast ? (p: Place, from: number, to: number) => fitFor(p, forecast, date, from, to) : undefined,
       date,
       speedKmh: trip.walkingSpeedKmh,
       origin: trip.homeBase?.coords ?? null,
@@ -86,7 +90,7 @@ export function useTimeline(trip: Trip, date: IsoDate): RoutedTimeline {
       maxDayKm: trip.maxDayKm,
       transitThresholdKm: trip.transitThresholdKm,
     }),
-    [date, trip.walkingSpeedKmh, trip.homeBase, trip.maxDayHours, trip.maxDayKm, trip.transitThresholdKm],
+    [forecast, date, trip.walkingSpeedKmh, trip.homeBase, trip.maxDayHours, trip.maxDayKm, trip.transitThresholdKm],
   )
   return useRoutedTimeline(day, o)
 }

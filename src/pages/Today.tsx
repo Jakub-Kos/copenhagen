@@ -7,6 +7,7 @@ import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
+import { WeatherStrip } from '@/components/WeatherStrip'
 import { useT } from '@/i18n/useT'
 import { googleMapsDirections } from '@/logic/geo'
 import { entryPoint } from '@/logic/timeline'
@@ -62,7 +63,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
   const { t, bi, lang } = useT()
   const { tl, legRoute, lines: dayLines } = useTimeline(trip, date)
   const [liveLine, setLiveLine] = useState<MapLine | null>(null)
-  const warned = (stopId: string, kind: 'closed' | 'dark') =>
+  const warned = (stopId: string, kind: 'closed' | 'dark' | 'rain' | 'wind') =>
     tl.warnings.some((w) => w.kind === kind && w.stopId === stopId)
   // The next stop is the first one not yet left.
   const nextIdx = tl.stops.findIndex((s) => s.leave > nowMin)
@@ -86,6 +87,8 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
         <h1 className="text-2xl font-bold first-letter:uppercase">{formatDayLong(date, lang)}</h1>
         {tl.sunset !== null && <p className="text-slate-500 dark:text-slate-400">🌇 {t('sunset', { t: fromMinutes(tl.sunset) })}</p>}
       </div>
+
+      <WeatherStrip date={date} />
 
       {tl.stops.length === 0 ? (
         <p>
@@ -138,6 +141,12 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                         )}
                         {!isDone && warned(s.stopId, 'dark') && (
                           <div className="font-medium text-amber-700 dark:text-amber-400">🌙 {t('warn.dark')}</div>
+                        )}
+                        {!isDone && warned(s.stopId, 'rain') && (
+                          <div className="font-medium text-blue-700 dark:text-blue-300">🌧️ {t('warn.rain')}</div>
+                        )}
+                        {!isDone && warned(s.stopId, 'wind') && (
+                          <div className="font-medium text-amber-700 dark:text-amber-400">💨 {t('warn.wind')}</div>
                         )}
                         {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
                       </div>

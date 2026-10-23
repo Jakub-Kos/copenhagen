@@ -41,12 +41,17 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `state/routeStore.ts` shares results between components. `components/useRoutes.ts` requests them after a 600 ms debounce. Errors are retried after 60 s, and estimates stay on screen meanwhile.
   - `useRoutedTimeline` builds an estimate first, routes its walking legs and street walks (interior waypoints sent as `through`), and rebuilds with real routes. It also returns map `lines`: `route` when routed, `estimate`/`transit` dashed when not.
   - Optimise order uses `/optimized_route`, which keeps the first and last locations fixed. The Plan passes home as both, so every stop can move.
+- **Weather** (phase 4):
+  - `services/weather.ts` makes the Open-Meteo request, using unix timestamps converted with `cphParts` so the DST day has no duplicated or missing local hours, and wind in m/s.
+  - `state/forecastStore.ts` + `useForecast()` cache it in `cph:forecast` and refetch when it's over an hour old, including when the tab becomes visible again.
+  - `logic/weatherFit.ts` (pure): `conditionsOf(hoursIn(...))` → `weatherFit(place)` (score, wet/showery/windy) and `hintFor` ("good" / "better on <day>").
+  - Wiring: `useTimeline` passes `weatherFor` so `buildTimeline` emits `rain`/`wind` warnings, and `DayPlanner` passes the fit score as `suggestDay`'s `extraScore`.
 - **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status
 
-Phases 1–3 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Next is phase 4: weather. Plug its scoring into `suggestDay({ extraScore })` and add a rain warning to `buildTimeline`.
+Phases 1–4 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Next is phase 5: group, prices (`data/prices.ts`), cost list and the Copenhagen Card calculator.
 
 ## Required workflow (from the spec)
 

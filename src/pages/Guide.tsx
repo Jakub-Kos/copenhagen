@@ -9,6 +9,7 @@ import { KIND_ICON, WEATHER_ICON } from '@/components/kindStyle'
 import { MapView, type MapLine } from '@/components/MapView'
 import { PlaceDetail } from '@/components/PlaceDetail'
 import { RouteBuilder } from '@/components/RouteBuilder'
+import { WeatherHint } from '@/components/WeatherHint'
 import { useRoutedTimeline } from '@/components/useTimeline'
 import { Stars } from '@/components/ui'
 import { cx, inputCls } from '@/components/cls'
@@ -203,6 +204,7 @@ export default function Guide() {
                     {pricingFor(p.id).free && <span>🆓</span>}
                     <span>{formatKm(haversineM(origin, p.coords))}</span>
                   </span>
+                  <WeatherHint place={p} date={refDate} dates={days} className="block" />
                 </span>
               </button>
             </li>

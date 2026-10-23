@@ -12,7 +12,10 @@ import { useActiveTrip, useStore } from '@/state/store'
 import { addStop, dayOf, plannedPlaces, tripDates } from '@/state/tripOps'
 import { KIND_ICON, WEATHER_ICON } from './kindStyle'
 import { Button, Stars } from './ui'
+import { WeatherHint } from './WeatherHint'
 import { cx, inputCls } from './cls'
+
+const week0 = (d: IsoDate) => Array.from({ length: 7 }, (_, i) => addDays(d, i))
 
 interface Props {
   place: Place
@@ -29,7 +32,8 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
   const pricing = pricingFor(p.id)
   const planned = trip ? (plannedPlaces(trip).get(p.id) ?? []) : []
 
-  const week = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(refDate, i)), [refDate])
+  const hintDates = trip ? tripDates(trip) : week0(refDate)
+  const week = useMemo(() => week0(refDate), [refDate])
 
   function add(date: IsoDate) {
     if (!trip) return
@@ -62,6 +66,7 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
         </Button>
       </div>
 
+      <WeatherHint place={p} date={refDate} dates={hintDates} />
       <p>{bi(p.description)}</p>
       {p.notes && <p className="text-sm text-slate-600 dark:text-slate-300">💡 {bi(p.notes)}</p>}
 

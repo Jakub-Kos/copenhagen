@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Plus, Settings } from 'lucide-react'
 import { DayPlanner } from '@/components/DayPlanner'
+import { useForecast } from '@/components/useForecast'
+import { wmo } from '@/components/wmo'
 import { TripSettings } from '@/components/TripSettings'
 import { Button, Card, Field } from '@/components/ui'
 import { cx, inputCls } from '@/components/cls'
@@ -53,6 +55,7 @@ export default function Plan() {
   const trip = useActiveTrip()
   const [params, setParams] = useSearchParams()
   const [creating, setCreating] = useState(false)
+  const { forecast } = useForecast()
 
   if (!trip || creating) {
     return (
@@ -108,7 +111,13 @@ export default function Plan() {
             )}
           >
             <span className="font-semibold">{formatDayShort(d, lang)}</span>
-            <span className="text-xs opacity-80">{dayOf(trip, d).stops.length || '–'}</span>
+            <span className="text-xs opacity-80">
+              {(() => {
+                const wx = forecast?.days.find((x) => x.date === d)
+                return wx ? `${wmo(wx.code).icon} ${Math.round(wx.tMax)}° · ` : ''
+              })()}
+              {dayOf(trip, d).stops.length || '–'}
+            </span>
           </button>
         ))}
         <button

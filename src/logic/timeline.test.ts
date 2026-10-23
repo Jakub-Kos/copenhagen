@@ -61,6 +61,19 @@ describe('buildTimeline', () => {
     expect(late.warnings).toContainEqual({ kind: 'dark', stopId: 'kastellet' })
   })
 
+  it('warns about rain at outdoor stops and wind at wind-sensitive ones', () => {
+    const wet = { score: -6, wet: true, showery: false, windy: true }
+    const tl = buildTimeline(
+      { startTime: '10:00', stops: [stop('kastellet'), stop('glyptotek'), stop('canal-tour')] },
+      lookup,
+      { ...opts, weatherFor: () => wet },
+    )
+    expect(tl.warnings).toContainEqual({ kind: 'rain', stopId: 'kastellet' })
+    expect(tl.warnings).not.toContainEqual({ kind: 'rain', stopId: 'glyptotek' })
+    expect(tl.warnings).toContainEqual({ kind: 'wind', stopId: 'canal-tour' })
+    expect(tl.warnings).not.toContainEqual({ kind: 'wind', stopId: 'kastellet' })
+  })
+
   it('warns about long days', () => {
     const tl = buildTimeline(
       { startTime: '09:00', stops: [stop('tivoli', { visitMin: 600 })] },

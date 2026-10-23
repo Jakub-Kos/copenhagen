@@ -4,6 +4,7 @@ import type { LatLng, Place } from '@/data/types'
 import type { DayPlan, LegMode } from '@/state/tripTypes'
 import { CITY_CENTRE, estimateWalkM, pathM, walkMinutes } from './geo'
 import { sunTimes } from './sun'
+import type { Fit } from './weatherFit'
 import { isOpenDuring, hoursOn } from './hours'
 import { type IsoDate, toMinutes } from './time'
 
@@ -29,6 +30,10 @@ export type Warning =
   | { kind: 'closed'; stopId: string }
   /** A daylight-only stop that is still going on after sunset. */
   | { kind: 'dark'; stopId: string }
+  /** Outdoor stop while rain is forecast. */
+  | { kind: 'rain'; stopId: string }
+  /** Wind-sensitive stop (towers, boats, harbour) while it's windy. */
+  | { kind: 'wind'; stopId: string }
   | { kind: 'too-long'; hours: number }
   | { kind: 'too-far'; km: number }
 
@@ -82,6 +87,8 @@ export interface TimelineOptions {
   maxDayKm: number
   /** Legs longer than this are suggested as public transport. */
   transitThresholdKm: number
+  /** Weather fit of a visit window, when a forecast covers it (phase 4). */
+  weatherFor?: (p: Place, from: number, to: number) => Fit | null
   /** Real routes by `legKey` (legs) or `walkKey` (inside street walks), used instead of estimates. */
   routes?: ReadonlyMap<string, { metres: number; minutes: number }>
 }
@@ -122,6 +129,9 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
     if (sunset !== null && place.bestTime.includes('daylight-only') && leave > sunset) {
       warnings.push({ kind: 'dark', stopId: s.id })
     }
+    const wx = o.weatherFor?.(place, arrive, leave)
+    if (wx?.wet && place.weather === 'outdoor') warnings.push({ kind: 'rain', stopId: s.id })
+    if (wx?.windy && place.windSensitive) warnings.push({ kind: 'wind', stopId: s.id })
     stops.push({ place, stopId: s.id, leg, arrive, leave })
     t = leave
     prev = exitPoint(place)
