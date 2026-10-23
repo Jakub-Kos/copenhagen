@@ -42,8 +42,14 @@ export interface Timeline {
 export const entryPoint = (p: Place): LatLng => p.waypoints?.[0] ?? p.coords
 export const exitPoint = (p: Place): LatLng => p.waypoints?.[p.waypoints.length - 1] ?? p.coords
 
-/** Walking distance inside a street walk. */
-export const innerWalkM = (p: Place): number => (p.waypoints ? pathM(p.waypoints) * 1.15 : 0)
+/** Key for the routed path of a street walk in `TimelineOptions.routes`. */
+export const walkKey = (placeId: string): string => `walk:${placeId}`
+
+/** Walking distance inside a street walk: routed if known, else the waypoint path plus a bit. */
+export function innerWalkM(p: Place, routes?: TimelineOptions['routes']): number {
+  if (!p.waypoints) return 0
+  return routes?.get(walkKey(p.id))?.metres ?? pathM(p.waypoints) * 1.15
+}
 
 /** Rough door-to-door time for a public-transport leg: waiting + walking to stops + riding. */
 export function transitMinutes(metres: number): number {
@@ -71,7 +77,7 @@ export interface TimelineOptions {
   maxDayKm: number
   /** Legs longer than this are suggested as public transport. */
   transitThresholdKm: number
-  /** Real routes by "fromLat,fromLng>toLat,toLng" key, used instead of estimates when present. */
+  /** Real routes by `legKey` (legs) or `walkKey` (inside street walks), used instead of estimates. */
   routes?: ReadonlyMap<string, { metres: number; minutes: number }>
 }
 
@@ -103,7 +109,7 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
     }
     const arrive = t
     const leave = arrive + (s.visitMin ?? place.durationMin)
-    walkM += innerWalkM(place)
+    walkM += innerWalkM(place, o.routes)
     if (hoursOn(place.openingHours, o.date) !== 'always' && !isOpenDuring(place.openingHours, o.date, arrive, leave)) {
       warnings.push({ kind: 'closed', stopId: s.id })
     }

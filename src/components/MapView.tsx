@@ -13,7 +13,8 @@ const STYLE_DARK = 'https://tiles.openfreemap.org/styles/dark'
 export interface MapLine {
   id: string
   coords: LatLng[]
-  style: 'walk' | 'route' | 'transit'
+  /** walk = catalogue walk; route = real walking route; estimate = straight line until routed. */
+  style: 'walk' | 'route' | 'estimate' | 'transit'
 }
 
 interface Props {
@@ -22,6 +23,8 @@ interface Props {
   onSelect?: (id: string) => void
   /** Small label on a marker: stop number in a day plan, ✓ for planned places. */
   badges?: ReadonlyMap<string, string>
+  /** When set, places not in it are faded. */
+  highlight?: ReadonlySet<string>
   home?: HomeBase | null
   lines?: MapLine[]
   /** Points to fit the view to; refits whenever `fitKey` changes. */
@@ -36,6 +39,7 @@ const toLngLat = (p: LatLng): [number, number] => [p.lng, p.lat]
 const LINE_PAINT: Record<MapLine['style'], { color: string; width: number; dash?: number[] }> = {
   walk: { color: '#646cff', width: 3, dash: [2, 1.5] },
   route: { color: '#646cff', width: 5 },
+  estimate: { color: '#646cff', width: 3, dash: [0.5, 2] },
   transit: { color: '#64748b', width: 3, dash: [1, 2] },
 }
 
@@ -44,6 +48,7 @@ export function MapView({
   selectedId,
   onSelect,
   badges,
+  highlight,
   home,
   lines,
   fitPoints,
@@ -117,7 +122,7 @@ export function MapView({
     for (const p of places) {
       const el = document.createElement('button')
       el.type = 'button'
-      el.className = `pin${p.mustSee ? ' must' : ''}${p.id === selectedId ? ' selected' : ''}`
+      el.className = `pin${p.mustSee ? ' must' : ''}${p.id === selectedId ? ' selected' : ''}${highlight && !highlight.has(p.id) ? ' dim' : ''}`
       el.style.setProperty('--pin-color', WEATHER_COLOR[p.weather])
       el.textContent = KIND_ICON[p.kind]
       el.title = p.name.en
@@ -142,7 +147,7 @@ export function MapView({
       el.title = home.label
       markers.current.push(new maplibregl.Marker({ element: el }).setLngLat(toLngLat(home.coords)).addTo(m))
     }
-  }, [places, selectedId, badges, home])
+  }, [places, selectedId, badges, highlight, home])
 
   // Lines.
   useEffect(() => {

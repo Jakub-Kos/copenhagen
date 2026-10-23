@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { placeById } from '@/data/places'
 import type { DayPlan } from '@/state/tripTypes'
-import { buildTimeline, suggestLegMode } from './timeline'
+import { buildTimeline, legKey, suggestLegMode, walkKey } from './timeline'
 
 const lookup = (id: string) => placeById.get(id)
 const opts = {
@@ -60,6 +60,29 @@ describe('buildTimeline', () => {
       opts,
     )
     expect(tl.warnings.some((w) => w.kind === 'too-long')).toBe(true)
+  })
+})
+
+describe('buildTimeline with real routes', () => {
+  it('uses routed legs and street-walk lengths instead of estimates', () => {
+    const nyhavn = placeById.get('nyhavn')!
+    const amalienborg = placeById.get('amalienborg')!
+    const walk = placeById.get('walk-stroget-nyhavn')!
+    const routes = new Map([
+      [legKey(nyhavn.coords, amalienborg.coords), { metres: 617, minutes: 9 }],
+      [walkKey(walk.id), { metres: 2000, minutes: 25 }],
+    ])
+    const tl = buildTimeline(
+      { startTime: '10:00', stops: [stop('walk-stroget-nyhavn'), stop('nyhavn'), stop('amalienborg')] },
+      lookup,
+      { ...opts, routes },
+    )
+    const leg = tl.stops[2].leg!
+    expect(leg.estimated).toBe(false)
+    expect(leg.metres).toBe(617)
+    expect(tl.stops[2].arrive).toBe(tl.stops[1].leave + 9)
+    // 2000 m inside the walk (which ends at Nyhavn, so no hop) + 617 m
+    expect(tl.walkM).toBeCloseTo(2617)
   })
 })
 

@@ -34,12 +34,17 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `tripOps.ts`: pure trip edits
   - `share.ts`: `parseTrip` validates every untrusted trip (storage, import, link)
   - A `Trip` has `v: 1`; bump it and migrate in `parseTrip` when the shape changes.
+- **Routing** (phase 2):
+  - `services/valhalla.ts` holds all Valhalla calls, through one queue (≥1.1 s apart), with in-flight dedupe and a localStorage cache (`cph:route:*`, LRU of 300) keyed by `routeKey` (ordered coords + speed + language).
+  - `state/routeStore.ts` shares results between components. `components/useRoutes.ts` requests them after a 600 ms debounce. Errors are retried after 60 s, and estimates stay on screen meanwhile.
+  - `useRoutedTimeline` builds an estimate first, routes its walking legs and street walks (interior waypoints sent as `through`), and rebuilds with real routes. It also returns map `lines`: `route` when routed, `estimate`/`transit` dashed when not.
+  - Optimise order uses `/optimized_route`, which keeps the first and last locations fixed. The Plan passes home as both, so every stop can move.
 - **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status
 
-Phase 1 is done, plus a basic Plan, Today view and share link, brought forward for the first trip. Legs are straight-line estimates (marked "odhad"/"estimate") until phase 2 (Valhalla).
+Phases 1–2 are done, plus a basic Plan, Today view and share link, brought forward for the first trip. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. Next up is phase 3: suggest a day, drag & drop on desktop, transit costs.
 
 ## Required workflow (from the spec)
 

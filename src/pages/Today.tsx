@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import { Home, Navigation } from 'lucide-react'
 import { KIND_ICON } from '@/components/kindStyle'
 import { LegRow } from '@/components/LegRow'
+import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
 import { useT } from '@/i18n/useT'
 import { googleMapsDirections } from '@/logic/geo'
+import { entryPoint } from '@/logic/timeline'
 import { type IsoDate, formatDayLong, fromMinutes, nowMinutesInCph, todayInCph } from '@/logic/time'
 import { useActiveTrip } from '@/state/store'
 import { dayOf, tripDates } from '@/state/tripOps'
@@ -58,25 +60,23 @@ export default function Today() {
 
 function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: number }) {
   const { t, bi, lang } = useT()
-  const tl = useTimeline(trip, date)
+  const { tl, legRoute, lines: dayLines } = useTimeline(trip, date)
+  const [liveLine, setLiveLine] = useState<MapLine | null>(null)
   // The next stop is the first one not yet left.
   const nextIdx = tl.stops.findIndex((s) => s.leave > nowMin)
 
-  const lines = useMemo<MapLine[]>(
-    () =>
-      tl.stops.flatMap((s) => [
-        ...(s.leg ? [{ id: `${s.stopId}-leg`, coords: [s.leg.from, s.leg.to], style: s.leg.mode === 'walk' ? 'route' : 'transit' } as MapLine] : []),
-        ...(s.place.waypoints ? [{ id: `${s.stopId}-walk`, coords: s.place.waypoints, style: 'route' } as MapLine] : []),
-      ]),
-    [tl],
-  )
+  const lines = useMemo(() => (liveLine ? [...dayLines, liveLine] : dayLines), [dayLines, liveLine])
   const dayPlaces = useMemo(() => tl.stops.map((s) => s.place), [tl.stops])
   const badges = useMemo(() => new Map(tl.stops.map((s, i) => [s.place.id, String(i + 1)])), [tl.stops])
   const next = nextIdx >= 0 ? tl.stops[nextIdx] : null
   const fitPoints = useMemo(
-    () => (next ? [next.place.coords] : dayPlaces.map((p) => p.coords)),
-    [next, dayPlaces],
+    () => (liveLine ? liveLine.coords : next ? [next.place.coords] : dayPlaces.map((p) => p.coords)),
+    [next, dayPlaces, liveLine],
   )
+  const liveTargets: LiveTarget[] = [
+    ...(next ? [{ id: 'next', label: t('routeToNext'), coords: entryPoint(next.place) }] : []),
+    ...(trip.homeBase ? [{ id: 'home', label: t('routeHomeFromHere'), coords: trip.homeBase.coords }] : []),
+  ]
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
@@ -96,7 +96,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
             home={trip.homeBase}
             lines={lines}
             fitPoints={fitPoints}
-            fitKey={`${date}:${nextIdx}`}
+            fitKey={`${date}:${nextIdx}:${liveLine ? liveLine.coords.length : 0}`}
           />
 
           <ol className="flex flex-col">
@@ -105,7 +105,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
               const isDone = nextIdx === -1 || i < nextIdx
               return (
                 <li key={s.stopId}>
-                  {s.leg && <LegRow leg={s.leg} />}
+                  {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} />}
                   <div
                     className={cx(
                       'rounded-xl border p-4',
@@ -141,12 +141,21 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                         <Navigation size={20} /> {t('navigate')}
                       </a>
                     )}
+                    {isNext && (
+                      <div className="mt-3">
+                        <LiveRoute targets={liveTargets} speedKmh={trip.walkingSpeedKmh} onLine={setLiveLine} />
+                      </div>
+                    )}
                   </div>
                 </li>
               )
             })}
           </ol>
         </>
+      )}
+
+      {!next && liveTargets.length > 0 && (
+        <LiveRoute targets={liveTargets} speedKmh={trip.walkingSpeedKmh} onLine={setLiveLine} />
       )}
 
       {trip.homeBase && (

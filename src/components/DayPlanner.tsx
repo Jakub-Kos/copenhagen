@@ -1,16 +1,18 @@
-import { useMemo } from 'react'
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { ArrowDown, ArrowUp, Shuffle, Trash2 } from 'lucide-react'
 import { placeById, places } from '@/data/places'
 import { useT } from '@/i18n/useT'
 import { steps } from '@/logic/geo'
-import { suggestLegMode } from '@/logic/timeline'
+import { entryPoint, suggestLegMode } from '@/logic/timeline'
+import { optimizedOrder } from '@/services/valhalla'
 import { type IsoDate, fromMinutes } from '@/logic/time'
 import { useStore } from '@/state/store'
-import { addStop, dayOf, moveStop, plannedPlaces, removeStop, setStartTime, updateStop } from '@/state/tripOps'
+import { addStop, dayOf, moveStop, plannedPlaces, removeStop, reorderStops, setStartTime, updateStop } from '@/state/tripOps'
 import type { Trip } from '@/state/tripTypes'
 import { KIND_ICON } from './kindStyle'
 import { LegRow } from './LegRow'
-import { MapView, type MapLine } from './MapView'
+import { Directions } from './Directions'
+import { MapView } from './MapView'
 import { Button, Field } from './ui'
 import { inputCls } from './cls'
 import { useTimeline } from './useTimeline'
@@ -20,7 +22,9 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const { dispatch } = useStore()
   const save = (next: Trip) => dispatch({ type: 'upsertTrip', trip: next })
   const day = dayOf(trip, date)
-  const tl = useTimeline(trip, date)
+  const { tl, legRoute, walkRoute, lines } = useTimeline(trip, date)
+  const [optimising, setOptimising] = useState(false)
+  const [optimiseError, setOptimiseError] = useState(false)
 
   const closedStops = new Set(tl.warnings.flatMap((w) => (w.kind === 'closed' ? [w.stopId] : [])))
   const sortedPlaces = useMemo(() => [...places].sort((a, b) => a.name[lang].localeCompare(b.name[lang], lang)), [lang])
@@ -32,15 +36,6 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
 
   const badges = useMemo(() => new Map(tl.stops.map((s, i) => [s.place.id, String(i + 1)])), [tl.stops])
   const dayPlaces = useMemo(() => tl.stops.map((s) => s.place), [tl.stops])
-  const lines = useMemo<MapLine[]>(() => {
-    const out: MapLine[] = []
-    for (const s of tl.stops) {
-      if (s.leg) out.push({ id: `${s.stopId}-leg`, coords: [s.leg.from, s.leg.to], style: s.leg.mode === 'walk' ? 'route' : 'transit' })
-      if (s.place.waypoints) out.push({ id: `${s.stopId}-walk`, coords: s.place.waypoints, style: 'route' })
-    }
-    if (tl.homeLeg) out.push({ id: 'home', coords: [tl.homeLeg.from, tl.homeLeg.to], style: tl.homeLeg.mode === 'walk' ? 'route' : 'transit' })
-    return out
-  }, [tl])
   const fitPoints = useMemo(
     () => [...dayPlaces.map((p) => p.coords), ...(trip.homeBase ? [trip.homeBase.coords] : [])],
     [dayPlaces, trip.homeBase],
@@ -52,6 +47,37 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
     const prev = tl.stops.at(-1)?.place ?? null
     save(addStop(trip, date, placeId, suggestLegMode(prev, trip.homeBase?.coords ?? null, place, trip.transitThresholdKm)))
   }
+
+  /** Valhalla keeps the first and last location fixed; with a home base those are home, so every stop can move. */
+  async function optimise() {
+    const stops = tl.stops
+    const home = trip.homeBase?.coords
+    const points = [...(home ? [home] : []), ...stops.map((s) => entryPoint(s.place)), ...(home ? [home] : [])]
+    setOptimising(true)
+    setOptimiseError(false)
+    try {
+      const order = await optimizedOrder(points, { speedKmh: trip.walkingSpeedKmh })
+      const stopOrder = home ? order.slice(1, -1).map((i) => i - 1) : order
+      let next = reorderStops(trip, date, stopOrder.map((i) => stops[i].stopId))
+      // Legs changed, so re-suggest walk vs transport for each of them.
+      const ordered = dayOf(next, date).stops
+      ordered.forEach((st, i) => {
+        const place = placeById.get(st.placeId)
+        const prev = i > 0 ? (placeById.get(ordered[i - 1].placeId) ?? null) : null
+        if (place) {
+          const legMode = suggestLegMode(prev, home ?? null, place, trip.transitThresholdKm)
+          next = updateStop(next, date, st.id, { legMode })
+        }
+      })
+      save(next)
+    } catch {
+      setOptimiseError(true)
+    } finally {
+      setOptimising(false)
+    }
+  }
+
+  const canOptimise = tl.stops.length >= (trip.homeBase ? 2 : 4)
 
   return (
     <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_1fr] md:items-start">
@@ -75,7 +101,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
             const stop = day.stops.find((x) => x.id === s.stopId)!
             return (
               <li key={s.stopId}>
-                {s.leg && <LegRow leg={s.leg} onMode={(m) => save(updateStop(trip, date, s.stopId, { legMode: m }))} />}
+                {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} onMode={(m) => save(updateStop(trip, date, s.stopId, { legMode: m }))} />}
                 <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
                   <div className="flex items-start gap-3">
                     <span className="grid size-8 shrink-0 place-items-center rounded-full bg-navy font-bold text-white">{i + 1}</span>
@@ -89,6 +115,10 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                       {closedStops.has(s.stopId) && (
                         <div className="text-sm font-medium text-red-600 dark:text-red-400">⚠️ {t('warn.closed')}</div>
                       )}
+                      {s.place.waypoints && (() => {
+                        const r = walkRoute(s.place)
+                        return r?.status === 'ok' ? <div className="mt-1 text-sm"><Directions route={r.route} /></div> : null
+                      })()}
                     </div>
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -132,8 +162,18 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
 
         {tl.homeLeg && trip.homeBase && (
           <div>
-            <LegRow leg={tl.homeLeg} />
+            <LegRow leg={tl.homeLeg} route={legRoute(tl.homeLeg)} />
             <div className="ml-1 text-sm font-medium">🏠 {t('backHome', { home: trip.homeBase.label })} · {fromMinutes(tl.end)}</div>
+          </div>
+        )}
+
+        {canOptimise && (
+          <div className="flex flex-col gap-1">
+            <Button onClick={optimise} disabled={optimising} className="self-start">
+              <Shuffle size={18} /> {optimising ? t('optimising') : t('optimise')}
+            </Button>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('optimiseHint')}</p>
+            {optimiseError && <p className="text-sm text-red-600">{t('optimiseFailed')}</p>}
           </div>
         )}
 

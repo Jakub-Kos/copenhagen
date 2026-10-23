@@ -33,6 +33,15 @@ export function moveStop(t: Trip, d: IsoDate, stopId: string, delta: -1 | 1): Tr
   })
 }
 
+/** Puts the listed stops in the given order; stops not listed keep their place at the end. */
+export function reorderStops(t: Trip, d: IsoDate, stopIds: string[]): Trip {
+  return withStops(t, d, (s) => {
+    const byId = new Map(s.map((x) => [x.id, x]))
+    const ordered = stopIds.flatMap((id) => byId.get(id) ?? [])
+    return [...ordered, ...s.filter((x) => !stopIds.includes(x.id))]
+  })
+}
+
 export const updateStop = (t: Trip, d: IsoDate, stopId: string, patch: Partial<Omit<PlannedStop, 'id'>>): Trip =>
   withStops(t, d, (s) => s.map((x) => (x.id === stopId ? { ...x, ...patch } : x)))
 
