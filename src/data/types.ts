@@ -132,6 +132,8 @@ export interface PaidPricing {
   childBands: ChildBand[]
   freeUnderAge: number | null
   freeTimes?: Bi
+  /** Anything else about the price (online discount, seasonal prices, "from" prices). */
+  note?: Bi
   includedInCopenhagenCard: boolean | null
   extras: ExtraItem[]
   source: string | null
