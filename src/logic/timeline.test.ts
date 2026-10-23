@@ -53,6 +53,14 @@ describe('buildTimeline', () => {
     expect(tl.homeLeg).not.toBeNull()
   })
 
+  it('warns when a daylight-only stop runs past sunset', () => {
+    // Kastellet is daylight-only; on 27 Oct the sun sets around 16:45.
+    const early = buildTimeline({ startTime: '14:00', stops: [stop('kastellet')] }, lookup, opts)
+    const late = buildTimeline({ startTime: '16:30', stops: [stop('kastellet')] }, lookup, opts)
+    expect(early.warnings).not.toContainEqual({ kind: 'dark', stopId: 'kastellet' })
+    expect(late.warnings).toContainEqual({ kind: 'dark', stopId: 'kastellet' })
+  })
+
   it('warns about long days', () => {
     const tl = buildTimeline(
       { startTime: '09:00', stops: [stop('tivoli', { visitMin: 600 })] },

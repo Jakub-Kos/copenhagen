@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { decodeTrip, encodeTrip, parseTrip } from './share'
-import { addStop, moveStop, reorderStops, setDates } from './tripOps'
+import { addStop, moveStop, moveStopTo, reorderStops, setDates } from './tripOps'
 import { newTrip } from './tripTypes'
 
 describe('trip sharing', () => {
@@ -29,6 +29,10 @@ describe('trip ops', () => {
     const ids = t.days['2026-10-24'].stops.map((s) => s.id)
     t = reorderStops(t, '2026-10-24', [ids[1]])
     expect(t.days['2026-10-24'].stops.map((s) => s.placeId)).toEqual(['nyhavn', 'tivoli'])
+    t = addStop(t, '2026-10-24', 'smk')
+    const smk = t.days['2026-10-24'].stops[2].id
+    t = moveStopTo(t, '2026-10-24', smk, 0)
+    expect(t.days['2026-10-24'].stops.map((s) => s.placeId)).toEqual(['smk', 'nyhavn', 'tivoli'])
     t = setDates(t, '2026-10-24', '2026-10-25')
     expect(Object.keys(t.days)).toEqual(['2026-10-24'])
   })

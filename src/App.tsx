@@ -1,6 +1,7 @@
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { BottomNav } from '@/components/BottomNav'
 import { Header } from '@/components/Header'
+import { OpenToday } from '@/components/OpenToday'
 import { StoreProvider } from '@/state/StoreProvider'
 import Guide from '@/pages/Guide'
 import Plan from '@/pages/Plan'
@@ -14,6 +15,7 @@ export default function App() {
   return (
     <StoreProvider>
       <HashRouter>
+        <OpenToday />
         <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           <Header />
           <main>

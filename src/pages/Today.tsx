@@ -62,6 +62,8 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
   const { t, bi, lang } = useT()
   const { tl, legRoute, lines: dayLines } = useTimeline(trip, date)
   const [liveLine, setLiveLine] = useState<MapLine | null>(null)
+  const warned = (stopId: string, kind: 'closed' | 'dark') =>
+    tl.warnings.some((w) => w.kind === kind && w.stopId === stopId)
   // The next stop is the first one not yet left.
   const nextIdx = tl.stops.findIndex((s) => s.leave > nowMin)
 
@@ -80,7 +82,10 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
-      <h1 className="text-2xl font-bold first-letter:uppercase">{formatDayLong(date, lang)}</h1>
+      <div>
+        <h1 className="text-2xl font-bold first-letter:uppercase">{formatDayLong(date, lang)}</h1>
+        {tl.sunset !== null && <p className="text-slate-500 dark:text-slate-400">🌇 {t('sunset', { t: fromMinutes(tl.sunset) })}</p>}
+      </div>
 
       {tl.stops.length === 0 ? (
         <p>
@@ -128,6 +133,12 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                           {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}
                           {isDone && ` · ✓ ${t('done')}`}
                         </div>
+                        {!isDone && warned(s.stopId, 'closed') && (
+                          <div className="font-medium text-red-600 dark:text-red-400">⚠️ {t('warn.closed')}</div>
+                        )}
+                        {!isDone && warned(s.stopId, 'dark') && (
+                          <div className="font-medium text-amber-700 dark:text-amber-400">🌙 {t('warn.dark')}</div>
+                        )}
                         {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
                       </div>
                     </div>

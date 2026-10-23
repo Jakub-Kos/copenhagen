@@ -29,9 +29,11 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `geo.ts`: haversine × 1.3 detour estimate, Google Maps links
   - `timeline.ts`: day schedule, legs and warnings. Street walks enter at their first waypoint and exit at their last. `TimelineOptions.routes` (keyed by `legKey`) is where real Valhalla legs replace the estimates.
   - `filters.ts`: catalogue filtering and sorting
+  - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.
+  - `suggest.ts`: "Suggest a day", a greedy fill. Each step picks the best-scoring unplanned place that's open for the whole visit, done before sunset if daylight-only, and within the day's hours/km including the way home. Score = rating, must-see bonus and lunch bonus, minus distance (which keeps the day clustered). `extraScore` is the hook for phase 4 weather.
 - **State** (`src/state/`):
   - `store.ts`: reducer, context, `useActiveTrip`; persisted under `cph:*` localStorage keys via `storage.ts`
-  - `tripOps.ts`: pure trip edits
+  - `tripOps.ts`: pure trip edits. Call `resuggestLegModes` after any reorder (up/down, drag & drop, optimise).
   - `share.ts`: `parseTrip` validates every untrusted trip (storage, import, link)
   - A `Trip` has `v: 1`; bump it and migrate in `parseTrip` when the shape changes.
 - **Routing** (phase 2):
@@ -44,7 +46,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 
 ## Phase status
 
-Phases 1–2 are done, plus a basic Plan, Today view and share link, brought forward for the first trip. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. Next up is phase 3: suggest a day, drag & drop on desktop, transit costs.
+Phases 1–3 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Next is phase 4: weather. Plug its scoring into `suggestDay({ extraScore })` and add a rain warning to `buildTimeline`.
 
 ## Required workflow (from the spec)
 

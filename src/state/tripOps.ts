@@ -1,5 +1,7 @@
 // Pure trip updates. Each returns a new Trip.
 
+import { placeById } from '@/data/places'
+import { suggestLegMode } from '@/logic/timeline'
 import { type IsoDate, datesBetween } from '@/logic/time'
 import { type DayPlan, type LegMode, type PlannedStop, type Trip, emptyDay, newId } from './tripTypes'
 
@@ -33,6 +35,17 @@ export function moveStop(t: Trip, d: IsoDate, stopId: string, delta: -1 | 1): Tr
   })
 }
 
+/** Moves a stop to a new index (drag & drop). */
+export function moveStopTo(t: Trip, d: IsoDate, stopId: string, index: number): Trip {
+  return withStops(t, d, (s) => {
+    const from = s.findIndex((x) => x.id === stopId)
+    if (from < 0) return s
+    const out = s.filter((x) => x.id !== stopId)
+    out.splice(Math.max(0, Math.min(index, out.length)), 0, s[from])
+    return out
+  })
+}
+
 /** Puts the listed stops in the given order; stops not listed keep their place at the end. */
 export function reorderStops(t: Trip, d: IsoDate, stopIds: string[]): Trip {
   return withStops(t, d, (s) => {
@@ -61,4 +74,16 @@ export function plannedPlaces(t: Trip): Map<string, IsoDate[]> {
     for (const s of t.days[d]?.stops ?? []) m.set(s.placeId, [...(m.get(s.placeId) ?? []), d])
   }
   return m
+}
+
+/** After a reorder the legs are different: re-suggest walk vs transport for each of them. */
+export function resuggestLegModes(t: Trip, d: IsoDate): Trip {
+  const home = t.homeBase?.coords ?? null
+  return withStops(t, d, (stops) =>
+    stops.map((st, i) => {
+      const place = placeById.get(st.placeId)
+      const prev = i > 0 ? (placeById.get(stops[i - 1].placeId) ?? null) : null
+      return place ? { ...st, legMode: suggestLegMode(prev, home, place, t.transitThresholdKm) } : st
+    }),
+  )
 }

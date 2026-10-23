@@ -2,7 +2,8 @@
 
 import type { LatLng, Place } from '@/data/types'
 import type { DayPlan, LegMode } from '@/state/tripTypes'
-import { estimateWalkM, pathM, walkMinutes } from './geo'
+import { CITY_CENTRE, estimateWalkM, pathM, walkMinutes } from './geo'
+import { sunTimes } from './sun'
 import { isOpenDuring, hoursOn } from './hours'
 import { type IsoDate, toMinutes } from './time'
 
@@ -26,6 +27,8 @@ export interface TimelineStop {
 
 export type Warning =
   | { kind: 'closed'; stopId: string }
+  /** A daylight-only stop that is still going on after sunset. */
+  | { kind: 'dark'; stopId: string }
   | { kind: 'too-long'; hours: number }
   | { kind: 'too-far'; km: number }
 
@@ -35,6 +38,8 @@ export interface Timeline {
   homeLeg: Leg | null
   walkM: number
   end: number
+  /** Minutes since midnight, Copenhagen time; null only in polar day/night. */
+  sunset: number | null
   warnings: Warning[]
 }
 
@@ -97,6 +102,7 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
   let prev: LatLng | null = o.origin
   const stops: TimelineStop[] = []
   const warnings: Warning[] = []
+  const sunset = sunTimes(o.date, o.origin ?? CITY_CENTRE)?.sunset ?? null
 
   for (const s of day.stops) {
     const place = lookup(s.placeId)
@@ -112,6 +118,9 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
     walkM += innerWalkM(place, o.routes)
     if (hoursOn(place.openingHours, o.date) !== 'always' && !isOpenDuring(place.openingHours, o.date, arrive, leave)) {
       warnings.push({ kind: 'closed', stopId: s.id })
+    }
+    if (sunset !== null && place.bestTime.includes('daylight-only') && leave > sunset) {
+      warnings.push({ kind: 'dark', stopId: s.id })
     }
     stops.push({ place, stopId: s.id, leg, arrive, leave })
     t = leave
@@ -130,5 +139,5 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
   if (stops.length && hours > o.maxDayHours) warnings.push({ kind: 'too-long', hours })
   if (walkM / 1000 > o.maxDayKm) warnings.push({ kind: 'too-far', km: walkM / 1000 })
 
-  return { stops, homeLeg, walkM, end: t, warnings }
+  return { stops, homeLeg, walkM, end: t, sunset, warnings }
 }
