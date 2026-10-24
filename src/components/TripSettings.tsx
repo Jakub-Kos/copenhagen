@@ -6,6 +6,7 @@ import { useStore } from '@/state/store'
 import { downloadJson, parseTrip, shareUrl } from '@/state/share'
 import { setDates } from '@/state/tripOps'
 import type { Trip } from '@/state/tripTypes'
+import { GroupEditor } from './GroupEditor'
 import { Button, Card, Field } from './ui'
 import { inputCls } from './cls'
 
@@ -129,6 +130,8 @@ export function TripSettings({ trip, onDeleted }: { trip: Trip; onDeleted: () =>
           </Field>
         </div>
       </Card>
+
+      <GroupEditor trip={trip} />
 
       <Card className="flex flex-col gap-3">
         <h2 className="text-lg font-bold">🏠 {t('homeBase')}</h2>

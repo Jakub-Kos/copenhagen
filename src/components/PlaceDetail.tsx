@@ -12,6 +12,7 @@ import { useActiveTrip, useStore } from '@/state/store'
 import { addStop, dayOf, plannedPlaces, tripDates } from '@/state/tripOps'
 import { KIND_ICON, WEATHER_ICON } from './kindStyle'
 import { Button, Stars } from './ui'
+import { PriceInfo } from './PriceInfo'
 import { WeatherHint } from './WeatherHint'
 import { cx, inputCls } from './cls'
 
@@ -77,7 +78,9 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
           {p.durationMax && ` – ${formatDuration(p.durationMax)}`}
         </dd>
         <dt className="text-slate-500 dark:text-slate-400">{t('price')}</dt>
-        <dd className={cx(!pricing.free && 'text-slate-500')}>{pricing.free ? t('priceFree') : t('priceUnknown')}</dd>
+        <dd>
+          <PriceInfo pricing={pricing} />
+        </dd>
         <dt className="text-slate-500 dark:text-slate-400">{WEATHER_ICON[p.weather]}</dt>
         <dd>
           {t(`weather.${p.weather}`)}

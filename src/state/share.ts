@@ -15,6 +15,29 @@ function isDay(x: unknown): x is DayPlan {
   )
 }
 
+const CATEGORIES = ['adult', 'senior', 'student', 'youth', 'child']
+
+function isTraveller(x: unknown): x is Trip['group'][number] {
+  return (
+    isObj(x) &&
+    typeof x.id === 'string' &&
+    typeof x.name === 'string' &&
+    CATEGORIES.includes(x.category as string) &&
+    (x.age === null || typeof x.age === 'number')
+  )
+}
+
+function isExtraCost(x: unknown): x is Trip['extraCosts'][number] {
+  return (
+    isObj(x) &&
+    typeof x.id === 'string' &&
+    typeof x.label === 'string' &&
+    typeof x.amountDkk === 'number' &&
+    (x.date === null || isDate(x.date)) &&
+    typeof x.paid === 'boolean'
+  )
+}
+
 /** Validates an untrusted value (import, share link, storage) and fills missing optional fields. */
 export function parseTrip(x: unknown): Trip | null {
   if (!isObj(x) || x.v !== 1) return null
@@ -34,7 +57,7 @@ export function parseTrip(x: unknown): Trip | null {
     name: x.name,
     start: x.start,
     end: x.end,
-    group: Array.isArray(x.group) ? (x.group as Trip['group']) : [],
+    group: Array.isArray(x.group) ? x.group.filter(isTraveller) : [],
     homeBase,
     walkingSpeedKmh: num(x.walkingSpeedKmh, 4.5),
     transitThresholdKm: num(x.transitThresholdKm, 3),
@@ -54,7 +77,12 @@ export function parseTrip(x: unknown): Trip | null {
         },
       ]),
     ),
-    extraCosts: Array.isArray(x.extraCosts) ? (x.extraCosts as Trip['extraCosts']) : [],
+    extraCosts: Array.isArray(x.extraCosts) ? (x.extraCosts as Trip['extraCosts']).filter(isExtraCost) : [],
+    paid: isObj(x.paid)
+      ? Object.fromEntries(Object.entries(x.paid).filter((e): e is [string, boolean] => typeof e[1] === 'boolean'))
+      : {},
+    budgetDkk: typeof x.budgetDkk === 'number' && x.budgetDkk > 0 ? x.budgetDkk : null,
+    czkRate: typeof x.czkRate === 'number' && x.czkRate > 0 ? x.czkRate : null,
   }
 }
 

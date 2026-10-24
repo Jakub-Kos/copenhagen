@@ -6,6 +6,7 @@ import type { IsoDate } from '@/logic/time'
 export interface Traveller {
   id: string
   name: string
+  /** adult, senior (65+), student, youth (18–26), child (needs an age). */
   category: TravellerCategory
   age: number | null
 }
@@ -55,6 +56,11 @@ export interface Trip {
   maxDayKm: number
   days: Record<IsoDate, DayPlan>
   extraCosts: ExtraCost[]
+  /** Paid flags of computed cost items (entries, transport), by cost-item key. */
+  paid: Record<string, boolean>
+  budgetDkk: number | null
+  /** Manual DKK→CZK rate; null = use the ECB rate. */
+  czkRate: number | null
 }
 
 export const DEFAULT_START_TIME = '09:30'
@@ -82,5 +88,8 @@ export function newTrip(name: string, start: IsoDate, end: IsoDate): Trip {
     maxDayKm: 15,
     days: {},
     extraCosts: [],
+    paid: {},
+    budgetDkk: null,
+    czkRate: null,
   }
 }

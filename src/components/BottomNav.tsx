@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { CalendarDays, Map, Navigation } from 'lucide-react'
+import { CalendarDays, Map, Navigation, Wallet } from 'lucide-react'
 import { useT } from '@/i18n/useT'
 
 export function BottomNav() {
@@ -8,6 +8,7 @@ export function BottomNav() {
     { to: '/', label: t('navGuide'), icon: Map, end: true },
     { to: '/plan', label: t('navPlan'), icon: CalendarDays, end: false },
     { to: '/today', label: t('navToday'), icon: Navigation, end: false },
+    { to: '/costs', label: t('navCosts'), icon: Wallet, end: false },
   ]
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-700 dark:bg-slate-900">

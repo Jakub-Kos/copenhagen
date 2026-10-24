@@ -6,6 +6,7 @@ import { steps } from '@/logic/geo'
 import { suggestDay } from '@/logic/suggest'
 import { entryPoint, suggestLegMode } from '@/logic/timeline'
 import { fitFor } from '@/logic/weatherFit'
+import { costItems, sumItems } from '@/logic/costs'
 import { optimizedOrder } from '@/services/valhalla'
 import { type IsoDate, fromMinutes } from '@/logic/time'
 import { useStore } from '@/state/store'
@@ -29,6 +30,7 @@ import { Directions } from './Directions'
 import { MapView } from './MapView'
 import { Button, Field } from './ui'
 import { cx, inputCls } from './cls'
+import { formatDkk } from './money'
 import { useForecast } from './useForecast'
 import { useTimeline } from './useTimeline'
 import { WeatherHint } from './WeatherHint'
@@ -310,6 +312,18 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                 end: fromMinutes(tl.end),
               })}
             </p>
+            {trip.group.length > 0 && (() => {
+              const its = costItems(trip, new Map([[date, tl]]), [date])
+              const e = sumItems(its.filter((i) => i.kind === 'entry'))
+              const tr = sumItems(its.filter((i) => i.kind === 'transport'))
+              const unknown = e.unknown + tr.unknown
+              return (
+                <p>
+                  💰 {t('dayCosts', { entries: formatDkk(e.dkk, lang), transport: formatDkk(tr.dkk, lang) })}
+                  {unknown > 0 && ` ${t('someUnknown', { n: unknown })}`}
+                </p>
+              )
+            })()}
             {tl.warnings.map((w, i) =>
               w.kind === 'too-long' ? (
                 <p key={i} className="text-amber-700 dark:text-amber-400">⚠️ {t('warn.too-long', { h: w.hours.toFixed(1) })}</p>

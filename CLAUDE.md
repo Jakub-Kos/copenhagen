@@ -46,12 +46,30 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `state/forecastStore.ts` + `useForecast()` cache it in `cph:forecast` and refetch when it's over an hour old, including when the tab becomes visible again.
   - `logic/weatherFit.ts` (pure): `conditionsOf(hoursIn(...))` → `weatherFit(place)` (score, wet/showery/windy) and `hintFor` ("good" / "better on <day>").
   - Wiring: `useTimeline` passes `weatherFor` so `buildTimeline` emits `rain`/`wind` warnings, and `DayPlanner` passes the fit score as `suggestDay`'s `extraScore`.
+- **Costs** (phase 5):
+  - Data:
+    - `data/prices.ts` holds entry prices, with `paid()` defaults: students/seniors fall back to the adult price, under 18 free unless stated.
+    - `data/transport.ts` holds the DOT single-ticket zone fares, City Pass Small/Large, Copenhagen Card prices and `estimateZones()` (distance-based, shown as "odhad").
+  - Logic: `logic/costs.ts` (pure, tested):
+    - `entryPrice`/`singleFares` handle per-traveller rules (2 under-12s free per adult, 67+ discount).
+    - `costItems` turns the timelines into time-stamped items.
+    - `optionsFor` evaluates none / City Pass / Card windows, each activated at the item it first covers.
+    - `cardVerdicts` gives the per-traveller best option; kids cards only come with an adult card.
+  - Other pieces:
+    - `services/exchangeRates.ts` gets the ECB DKK→CZK rate via Frankfurter (cached 12 h).
+    - `Trip.paid` holds the paid flags by cost-item key.
+    - `Trip.czkRate` is a manual rate override.
+- **Map style**: `components/mapStyle.ts` adds its own layers to the OpenFreeMap `openmaptiles` source, so the same code works for the light and dark styles, whose layer ids differ:
+  - green areas
+  - rail/metro (tunnels dashed) and stations, toggled by the 🚇 button
+  - landmark building outlines, done with an `['in', ['id'], ...]` filter. Feature-state isn't used.
+  - It also hides POI symbols, shields and one-way arrows. Landmark and transport layers must sit above the 3D `building` layers.
 - **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status
 
-Phases 1–4 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Next is phase 5: group, prices (`data/prices.ts`), cost list and the Copenhagen Card calculator.
+Phases 1–5 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Unconfirmed prices (null): Tivoli (date-dependent, "from 200"), Rosenborg, Frederiksborg, canal-tour child fares. Next is phase 6: offline (PWA) + polish.
 
 ## Required workflow (from the spec)
 

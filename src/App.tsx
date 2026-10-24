@@ -3,6 +3,7 @@ import { BottomNav } from '@/components/BottomNav'
 import { Header } from '@/components/Header'
 import { OpenToday } from '@/components/OpenToday'
 import { StoreProvider } from '@/state/StoreProvider'
+import Costs from '@/pages/Costs'
 import Guide from '@/pages/Guide'
 import Plan from '@/pages/Plan'
 import ShareImport from '@/pages/ShareImport'
@@ -23,6 +24,7 @@ export default function App() {
               <Route path="/" element={<Guide />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/today" element={<Today />} />
+              <Route path="/costs" element={<Costs />} />
               <Route path="/share/:data" element={<ShareImport />} />
               <Route path="*" element={<Guide />} />
             </Routes>
