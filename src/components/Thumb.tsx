@@ -15,5 +15,5 @@ export function Thumb({ placeId, className }: { placeId: string; className?: str
       </span>
     )
   }
-  return <img src={thumb(img, 250)} alt="" loading="lazy" className={cx(cls, 'bg-slate-200 object-cover dark:bg-slate-700')} />
+  return <img src={thumb(img, 250)} crossOrigin="anonymous" alt="" loading="lazy" className={cx(cls, 'bg-slate-200 object-cover dark:bg-slate-700')} />
 }

@@ -68,12 +68,17 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Overlays sit above the 3D `building` layers.
   - The Guide map passes `compactBelowZoom` (13.5): under it, markers become dots (CSS `.pins-small`).
 - **Photos**: `data/images.ts`, from Wikimedia Commons with author and licence. Always show the credit, as `PlaceDetail` does. Use `thumb(img, 250|500|960)` from `components/placeImage.ts`; Wikimedia only serves its standard widths.
+- **Offline** (phase 6):
+  - `vite-plugin-pwa` (`registerType: 'prompt'`) precaches the app shell and guide data. Runtime caches: `cph-map-meta` (styles + tilejson, NetworkFirst), `cph-map` (tiles, fonts, sprites, CacheFirst), `cph-photos` (Wikimedia, CacheFirst). The names are shared by `vite.config.ts` and `services/offline.ts`; keep them in sync.
+  - Images use `crossOrigin="anonymous"` so cached photos aren't opaque (opaque responses use a lot of storage quota).
+  - "Save for offline" (`state/offlinePack.ts`, `OfflineCard` in Today and trip settings): it uses `routeStore.ensure` to route every planned day (`routeSpecs` from `logic/timeline.ts`, the same specs `useTimeline` requests). It then writes map tiles for the whole guide (`logic/tiles.ts`, z10–14; OpenFreeMap stops at z14) and the photos straight into Cache Storage. That's about 30 MB. The result, with a `planSig` to detect later plan changes, is stored as `cph:offline`.
+  - `UpdatePrompt` offers new versions instead of reloading. `OfflineBanner` shows when `navigator.onLine` is false. `LiveRoute` draws a dashed direction line when there's no route.
 - **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status
 
-Phases 1–5 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Unconfirmed prices (null): Tivoli (date-dependent, "from 200"), Rosenborg, Frederiksborg, canal-tour child fares. Next is phase 6: offline (PWA) + polish.
+Phases 1–6 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Unconfirmed prices (null): Tivoli (date-dependent, "from 200"), Rosenborg, Frederiksborg, canal-tour child fares. Offline: see the Offline section above.
 
 ## Required workflow (from the spec)
 
@@ -86,7 +91,7 @@ Phases 1–5 are done. Route builder: Guide `?r=id1,id2`. Live route from your l
 - **Two kinds of data**:
   - The guide is static data committed to the repo, as hand-editable typed files (`data/places.ts`, `data/prices.ts`).
   - Trips are per user and live in localStorage, with JSON export/import and sharing via the URL hash. Nothing about a trip, especially the home base, is hard-coded or committed, because the repo is public.
-- **Network code goes only in** `services/valhalla.ts`, `services/weather.ts` and `services/exchangeRates.ts`. Every call needs loading and error states, and a Valhalla outage or rate limit must not break the page.
+- **Network code goes only in** `services/valhalla.ts`, `services/weather.ts`, `services/exchangeRates.ts` and `services/offline.ts` (the offline download). Every call needs loading and error states, and a Valhalla outage or rate limit must not break the page.
 - **Cost and Copenhagen Card logic are pure functions** with Vitest tests that cover group mixes and card windows (card hours start at first activation; the card is placed on the best run of consecutive days).
 - **Valhalla**: the public FOSSGIS demo (`https://valhalla1.openstreetmap.de`) with the base URL in one config constant. Respect about 1 request/second (debounce and queue), and cache in localStorage keyed by the ordered coordinate list. Polylines use precision 6.
 - **Map tiles**: free, no-key tiles whose policy allows this use, such as OpenFreeMap, with OSM attribution. Do not use tile.openstreetmap.org.

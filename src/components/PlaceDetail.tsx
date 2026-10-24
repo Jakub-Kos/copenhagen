@@ -61,7 +61,7 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
     <article className="flex flex-col">
       {img ? (
         <figure className="relative">
-          <img src={thumb(img, 960)} alt={bi(p.name)} className="h-52 w-full object-cover md:h-60" />
+          <img src={thumb(img, 960)} crossOrigin="anonymous" alt={bi(p.name)} className="h-52 w-full object-cover md:h-60" />
           <div className="absolute top-3 right-3">{closeButton}</div>
           <figcaption className="absolute right-0 bottom-0 max-w-full truncate rounded-tl-md bg-black/50 px-2 py-0.5 text-[10px] text-white">
             <a href={img.page} target="_blank" rel="noreferrer" className="font-normal text-white/90 no-underline hover:underline">

@@ -1,7 +1,9 @@
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import { BottomNav } from '@/components/BottomNav'
 import { Header } from '@/components/Header'
+import { OfflineBanner } from '@/components/OfflineBanner'
 import { OpenToday } from '@/components/OpenToday'
+import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { StoreProvider } from '@/state/StoreProvider'
 import Costs from '@/pages/Costs'
 import Guide from '@/pages/Guide'
@@ -19,6 +21,7 @@ export default function App() {
         <OpenToday />
         <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
           <Header />
+          <OfflineBanner />
           <main>
             <Routes>
               <Route path="/" element={<Guide />} />
@@ -29,6 +32,7 @@ export default function App() {
               <Route path="*" element={<Guide />} />
             </Routes>
           </main>
+          <UpdatePrompt />
           <BottomNav />
         </div>
       </HashRouter>

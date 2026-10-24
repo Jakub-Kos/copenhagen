@@ -279,6 +279,28 @@ export const en = {
   legendOutdoor: 'outdoors',
   legendMust: 'must-see',
   locationError: 'Could not get your location.',
+
+  // Offline
+  offlineBanner: 'Offline – the plan, saved routes and the saved map still work.',
+  offlineTitle: 'Offline',
+  offlineIntro: 'Save routes for every planned day, the map of the whole guide and the photos, so the plan works without signal. Best on Wi-Fi (about 30 MB).',
+  offlineSave: 'Save for offline',
+  offlineUpdate: 'Update offline copy',
+  offlineRoutes: 'Routes {done}/{total}…',
+  offlineFiles: 'Map and photos {done}/{total}…',
+  offlineSaved: 'Saved {when}.',
+  offlineSavedShort: 'Saved for offline use {when}.',
+  offlineSavedOther: 'The offline copy was made for another trip.',
+  offlinePartial: '{n} items could not be downloaded – try again with better signal.',
+  offlineStale: 'The plan changed since then – update the offline copy.',
+  offlineNeedsNet: 'Connect to the internet to save.',
+  offlineUnsupported: 'This browser cannot save the map offline.',
+  offlineInstall: 'Tip: add the site to your home screen (Share → Add to Home Screen) to open it like an app.',
+  cancel: 'Cancel',
+  updateReady: 'A new version is available.',
+  updateNow: 'Update',
+  offlineReady: 'The app now works offline.',
+  liveOffline: 'No route from here right now (weak signal?). The dashed line shows the direction; the planned routes still work.',
 }
 
 export type Dict = typeof en

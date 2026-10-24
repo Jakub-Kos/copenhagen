@@ -52,3 +52,17 @@ export function request(points: RoutePoint[], o: RouteOptions): void {
       set(key, { status: 'error', rateLimited: err instanceof ValhallaError && err.rateLimited, at: Date.now() }),
   )
 }
+
+/** Like `request`, but waits for the answer (used by the offline download). True when routed. */
+export async function ensure(points: RoutePoint[], o: RouteOptions): Promise<boolean> {
+  if (peek(points, o)?.status === 'ok') return true
+  const key = routeKey(points, o)
+  set(key, { status: 'loading' })
+  try {
+    set(key, { status: 'ok', route: await walkingRoute(points, o) })
+    return true
+  } catch (err) {
+    set(key, { status: 'error', rateLimited: err instanceof ValhallaError && err.rateLimited, at: Date.now() })
+    return false
+  }
+}

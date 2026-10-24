@@ -7,6 +7,7 @@ import { formatDuration } from '@/logic/time'
 import { Directions } from './Directions'
 import type { MapLine } from './MapView'
 import { Button } from './ui'
+import { useOnline } from './useOnline'
 import { useRoutes } from './useRoutes'
 
 export interface LiveTarget {
@@ -38,10 +39,15 @@ export function LiveRoute({
   const specs = target && pos ? [{ id: 'live', points: [pos, target.coords] }] : []
   const entry = useRoutes(specs, speedKmh, lang).get('live')
 
+  const online = useOnline()
   const shape = entry?.status === 'ok' ? entry.route.shape : null
+  // Without a route (offline, server down) a dashed straight line still shows the direction.
+  const fallback = !shape && pos && target && (!online || entry?.status === 'error') ? [pos, target.coords] : null
   useEffect(() => {
-    onLine(shape ? { id: 'live', coords: shape, style: 'route' } : null)
-  }, [shape, onLine])
+    if (shape) onLine({ id: 'live', coords: shape, style: 'route' })
+    else onLine(fallback ? { id: 'live', coords: fallback, style: 'estimate' } : null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `fallback` is rebuilt each render; its ends are the deps
+  }, [shape, onLine, fallback?.[0], fallback?.[1]])
 
   function start(id: string) {
     setActiveId(id)
@@ -76,12 +82,12 @@ export function LiveRoute({
           {locError && <p className="text-red-600">{t('locationError')}</p>}
           {!locating && !locError && pos && (
             <>
-              {(!entry || entry.status === 'loading') && <p>{t('routeLoading')}</p>}
-              {entry?.status === 'error' && (
+              {fallback && (
                 <p className="text-amber-700 dark:text-amber-400">
-                  {t(entry.rateLimited ? 'routeRateLimited' : 'routeError')}
+                  {t(entry?.status === 'error' && entry.rateLimited ? 'routeRateLimited' : 'liveOffline')}
                 </p>
               )}
+              {!fallback && (!entry || entry.status === 'loading') && <p>{t('routeLoading')}</p>}
               {entry?.status === 'ok' && (
                 <>
                   <p className="mb-2 font-semibold">

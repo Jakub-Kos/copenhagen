@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { placeById } from '@/data/places'
 import type { Place } from '@/data/types'
 import { useT } from '@/i18n/useT'
-import { type Leg, type Timeline, type TimelineOptions, buildTimeline, legKey, walkKey } from '@/logic/timeline'
+import { type Leg, type Timeline, type TimelineOptions, buildTimeline, legKey, routeSpecs, walkKey } from '@/logic/timeline'
 import type { IsoDate } from '@/logic/time'
 import type { RouteEntry } from '@/state/routeStore'
 import { dayOf } from '@/state/tripOps'
@@ -10,7 +10,7 @@ import type { DayPlan, Trip } from '@/state/tripTypes'
 import type { MapLine } from './MapView'
 import { fitFor } from '@/logic/weatherFit'
 import { useForecast } from './useForecast'
-import { type RouteSpec, useRoutes } from './useRoutes'
+import { useRoutes } from './useRoutes'
 
 export interface RoutedTimeline {
   tl: Timeline
@@ -26,23 +26,7 @@ export function useRoutedTimeline(day: DayPlan, o: Omit<TimelineOptions, 'routes
   const { lang } = useT()
   const estimate = useMemo(() => buildTimeline(day, lookup, o), [day, o])
 
-  const specs = useMemo<RouteSpec[]>(() => {
-    const out: RouteSpec[] = []
-    const legs = [...estimate.stops.map((s) => s.leg), estimate.homeLeg]
-    for (const leg of legs) {
-      if (leg?.mode === 'walk') out.push({ id: legKey(leg.from, leg.to), points: [leg.from, leg.to] })
-    }
-    for (const s of estimate.stops) {
-      const wp = s.place.waypoints
-      if (wp && !out.some((x) => x.id === walkKey(s.place.id))) {
-        out.push({
-          id: walkKey(s.place.id),
-          points: wp.map((p, i) => ({ ...p, through: i > 0 && i < wp.length - 1 })),
-        })
-      }
-    }
-    return out
-  }, [estimate])
+  const specs = useMemo(() => routeSpecs(estimate), [estimate])
 
   const entries = useRoutes(specs, o.speedKmh, lang)
 

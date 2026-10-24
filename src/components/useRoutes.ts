@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import type { Lang } from '@/data/types'
-import type { RoutePoint } from '@/services/valhalla'
+import type { RouteSpec } from '@/logic/timeline'
 import { type RouteEntry, getVersion, peek, request, subscribe } from '@/state/routeStore'
-
-export interface RouteSpec {
-  id: string
-  points: RoutePoint[]
-}
 
 const DEBOUNCE_MS = 600
 

@@ -7,6 +7,7 @@ import { downloadJson, parseTrip, shareUrl } from '@/state/share'
 import { setDates } from '@/state/tripOps'
 import type { Trip } from '@/state/tripTypes'
 import { GroupEditor } from './GroupEditor'
+import { OfflineCard } from './OfflineCard'
 import { Button, Card, Field } from './ui'
 import { inputCls } from './cls'
 
@@ -197,6 +198,8 @@ export function TripSettings({ trip, onDeleted }: { trip: Trip; onDeleted: () =>
         <p className="text-sm text-slate-500 dark:text-slate-400">{t('shareHint')}</p>
         {importError && <p className="text-sm text-red-600">{importError}</p>}
       </Card>
+
+      <OfflineCard trip={trip} />
 
       <Button
         variant="danger"

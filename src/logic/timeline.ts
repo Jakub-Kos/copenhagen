@@ -151,3 +151,25 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
 
   return { stops, homeLeg, walkM, end: t, sunset, warnings }
 }
+
+/** A walking route to request: legs between stops, and street walks through their waypoints. */
+export interface RouteSpec {
+  id: string
+  /** `through` points shape the line without becoming stops. */
+  points: (LatLng & { through?: boolean })[]
+}
+
+/** The walking routes a timeline needs; ids match `legKey` / `walkKey`. */
+export function routeSpecs(tl: Timeline): RouteSpec[] {
+  const out: RouteSpec[] = []
+  for (const leg of [...tl.stops.map((s) => s.leg), tl.homeLeg]) {
+    if (leg?.mode === 'walk') out.push({ id: legKey(leg.from, leg.to), points: [leg.from, leg.to] })
+  }
+  for (const s of tl.stops) {
+    const wp = s.place.waypoints
+    if (wp && !out.some((x) => x.id === walkKey(s.place.id))) {
+      out.push({ id: walkKey(s.place.id), points: wp.map((p, i) => ({ ...p, through: i > 0 && i < wp.length - 1 })) })
+    }
+  }
+  return out
+}

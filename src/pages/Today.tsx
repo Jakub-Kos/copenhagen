@@ -4,6 +4,7 @@ import { Home, Navigation } from 'lucide-react'
 import { KIND_ICON } from '@/components/kindStyle'
 import { LegRow } from '@/components/LegRow'
 import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
+import { OfflineCard } from '@/components/OfflineCard'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
@@ -53,6 +54,7 @@ export default function Today() {
             <Link to={`/plan?d=${next}`}>{t('showTodayPlan')}</Link>
           </p>
         )}
+        <OfflineCard trip={trip} compact />
       </div>
     )
   }
@@ -125,7 +127,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                     )}
                   >
                     {isNext && imageFor(s.place.id) && (
-                      <img src={thumb(imageFor(s.place.id)!, 500)} alt="" className="h-36 w-full object-cover" />
+                      <img src={thumb(imageFor(s.place.id)!, 500)} crossOrigin="anonymous" alt="" className="h-36 w-full object-cover" />
                     )}
                     <div className="flex flex-col gap-3 p-4">
                       <div className="flex items-start gap-3">
@@ -190,6 +192,8 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
           <Home size={18} /> {t('navigateHome')} ({trip.homeBase.label})
         </a>
       )}
+
+      <OfflineCard trip={trip} compact />
     </div>
   )
 }
