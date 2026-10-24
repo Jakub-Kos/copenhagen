@@ -351,6 +351,19 @@ export const en = {
   remCalendar: 'Add to the phone calendar',
   remCalendarHint: 'Downloads an .ics file with the plan and alarms; open it to add it to your calendar.',
   website: 'Website',
+
+  // Printable day sheet
+  printDay: 'Print',
+  printAll: 'Print the whole trip',
+  printNow: 'Print / save as PDF',
+  printHint: 'In the print dialog choose “Save as PDF” to keep a copy on the phone. One page per day.',
+  sheetStart: 'Start {time}',
+  sheetEnd: 'back ~{time}',
+  sheetWalk: '{km} km on foot',
+  sheetTransit: 'public transport – check Rejseplanen',
+  sheetNoTicket: 'no entry fee',
+  sheetHelpline: 'medical helpline',
+  sheetEmbassy: 'Czech Embassy',
 }
 
 export type Dict = typeof en

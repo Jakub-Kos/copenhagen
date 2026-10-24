@@ -8,6 +8,7 @@ import { StoreProvider } from '@/state/StoreProvider'
 import Costs from '@/pages/Costs'
 import Guide from '@/pages/Guide'
 import Info from '@/pages/Info'
+import Print from '@/pages/Print'
 import Plan from '@/pages/Plan'
 import ShareImport from '@/pages/ShareImport'
 import Today from '@/pages/Today'
@@ -20,7 +21,7 @@ export default function App() {
     <StoreProvider>
       <HashRouter>
         <OpenToday />
-        <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+        <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))] print:pb-0">
           <Header />
           <OfflineBanner />
           <main>
@@ -30,6 +31,7 @@ export default function App() {
               <Route path="/today" element={<Today />} />
               <Route path="/costs" element={<Costs />} />
               <Route path="/info" element={<Info />} />
+              <Route path="/print" element={<Print />} />
               <Route path="/share/:data" element={<ShareImport />} />
               <Route path="*" element={<Guide />} />
             </Routes>

@@ -9,7 +9,7 @@ export function Header() {
   const { largeText } = state.settings
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-navy px-4 py-2.5 text-navy-text">
+    <header className="sticky top-0 print:hidden z-30 flex items-center justify-between gap-3 bg-navy px-4 py-2.5 text-navy-text">
       <div className="flex min-w-0 items-baseline gap-3">
         <a href={SITE_URL} className="truncate text-sm font-bold text-navy-text/70 no-underline hover:text-navy-text">
           {t('backToSite')}

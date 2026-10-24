@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
-import { Download, Link2, LocateFixed, Trash2, Upload } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Download, Link2, LocateFixed, Printer, Trash2, Upload } from 'lucide-react'
 import { useT } from '@/i18n/useT'
 import { parseLatLng } from '@/logic/geo'
 import { useStore } from '@/state/store'
@@ -183,6 +184,12 @@ export function TripSettings({ trip, onDeleted }: { trip: Trip; onDeleted: () =>
           <Button onClick={() => fileRef.current?.click()}>
             <Upload size={18} /> {t('importJson')}
           </Button>
+          <Link
+            to="/print?d=all"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-800 no-underline dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+          >
+            <Printer size={18} /> {t('printAll')}
+          </Link>
           <input
             ref={fileRef}
             type="file"

@@ -21,7 +21,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 
 ## Architecture
 
-- **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/costs`, `#/info`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
+- **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/costs`, `#/info`, `#/print?d=`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
 - **Data** (`src/data/`): `types.ts` is the model. `places.ts` is the catalogue, with helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`. `prices.ts` gives `pricingFor(id)`; until phase 5, paid places return all-`null` prices.
 - **Pure logic** (`src/logic/`, unit-tested):
   - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight
@@ -74,6 +74,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `logic/reminders.ts` computes them: book places with `bookingNeeded` (due the day before), when to leave each day, the recommended Copenhagen Card / City Pass (from `cardVerdicts`, with the time and place of first use), and the DST night. `upcoming()` filters to what is due by tomorrow. Ticked-off reminders live in `Trip.done`, which was added to v1 with a `{}` default in `parseTrip`.
   - `Reminders` on Today shows up to 3 reminders, with a list of all of them.
   - Phones get real alarms through an .ics export: `logic/ics.ts` writes UTC times via `cphToUtc`, VALARM and line folding, and `components/calendarExport.ts` builds the events. There is no server, so no push notifications.
+- **Printable day sheets** (`#/print?d=YYYY-MM-DD|all`, linked from the Plan day and trip settings): `DaySheet` lays out one A4 page per day with a header (times, km, sunset, weather, emergency numbers, home), a tile-free SVG sketch map (`logic/sketch.ts`: north-up fit plus scale bar), the stops (hours, group price, warnings, notes) and the legs. Legs show turn-by-turn steps, dropping steps under 40 m. App chrome has `print:hidden`, `@page` is A4, and printing is always light.
 - **Practical info** (`#/info`): the content lives in `data/practical.ts` (emergency `tel:` numbers, tips, Danish phrases). Facts with a `source` were checked on 2026-10-24: 112/1813 at international.kk.dk, the embassy at mzv.gov.cz, Steno Apotek's 24 h hours on its own site, and the DKK 750 fine at international.kk.dk. Don't add facts you can't source.
 - **Photos**: `data/images.ts`, from Wikimedia Commons with author and licence. Always show the credit, as `PlaceDetail` does. Use `thumb(img, 250|500|960)` from `components/placeImage.ts`; Wikimedia only serves its standard widths.
 - **Offline** (phase 6):

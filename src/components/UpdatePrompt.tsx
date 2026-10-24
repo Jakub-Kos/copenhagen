@@ -28,7 +28,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-navy px-4 py-3 text-navy-text shadow-lg"
+      className="fixed inset-x-3 print:hidden bottom-[calc(5rem+env(safe-area-inset-bottom))] z-40 mx-auto flex max-w-md items-center gap-3 rounded-xl bg-navy px-4 py-3 text-navy-text shadow-lg"
     >
       <span className="flex-1">{needRefresh ? t('updateReady') : t('offlineReady')}</span>
       {needRefresh && (

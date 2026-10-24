@@ -12,7 +12,7 @@ export function BottomNav() {
     { to: '/info', label: t('navInfo'), icon: Info, end: false },
   ]
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-700 dark:bg-slate-900">
+    <nav className="fixed inset-x-0 print:hidden bottom-0 z-30 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] dark:border-slate-700 dark:bg-slate-900">
       <div className="mx-auto flex max-w-xl">
         {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink

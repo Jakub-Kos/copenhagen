@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, GripVertical, Shuffle, Sparkles, Trash2, Undo2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowDown, ArrowUp, GripVertical, Printer, Shuffle, Sparkles, Trash2, Undo2 } from 'lucide-react'
 import { placeById, places } from '@/data/places'
 import { useT } from '@/i18n/useT'
 import { steps } from '@/logic/geo'
@@ -307,6 +308,14 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
             >
               <Undo2 size={18} /> {t('undo')}
             </Button>
+          )}
+          {tl.stops.length > 0 && (
+            <Link
+              to={`/print?d=${date}`}
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 font-medium text-slate-800 no-underline dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+            >
+              <Printer size={18} /> {t('printDay')}
+            </Link>
           )}
         </div>
         <p className="text-xs text-slate-500 dark:text-slate-400">{t('suggestHint')}</p>

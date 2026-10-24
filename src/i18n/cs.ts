@@ -341,4 +341,17 @@ export const cs: Dict = {
   remCalendar: 'Přidat do kalendáře v telefonu',
   remCalendarHint: 'Stáhne soubor .ics s programem a upozorněními; otevřete ho a přidejte do kalendáře.',
   website: 'Web',
+
+  // Printable day sheet
+  printDay: 'Tisk',
+  printAll: 'Vytisknout celý výlet',
+  printNow: 'Tisknout / uložit PDF',
+  printHint: 'V dialogu tisku zvolte „Uložit jako PDF“ a máte kopii v telefonu. Každý den na jedné stránce.',
+  sheetStart: 'Start {time}',
+  sheetEnd: 'návrat ~{time}',
+  sheetWalk: '{km} km pěšky',
+  sheetTransit: 'MHD – spoje v Rejseplanen',
+  sheetNoTicket: 'bez vstupného',
+  sheetHelpline: 'lékařská linka',
+  sheetEmbassy: 'velvyslanectví ČR',
 }

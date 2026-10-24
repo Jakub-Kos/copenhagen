@@ -145,3 +145,24 @@
   font-weight: 600;
   color: #4338ca;
 }
+
+/* Printed day sheets: A4, always light, keep the sketch map's colours. */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+  }
+  .sheet {
+    color: #000 !important;
+  }
+  .sheet a {
+    color: #000;
+    text-decoration: none;
+  }
+}
