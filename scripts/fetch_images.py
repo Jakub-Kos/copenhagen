@@ -15,7 +15,14 @@ TITLES = {
  'walk-nyboder-amalienborg': 'Gefion Fountain', 'walk-norrebro': "Queen Louise's Bridge",
  'louisiana': 'Louisiana Museum of Modern Art', 'kronborg': 'Kronborg', 'frederiksborg': 'Frederiksborg Palace',
  'viking-ship-museum': 'Viking Ship Museum (Roskilde)', 'dyrehaven': 'Jægersborg Dyrehave',
+ 'city-hall': 'Copenhagen City Hall', 'holmens-church': 'Holmen Church', 'david-collection': 'David Collection',
+ 'hirschsprung': 'Hirschsprung Collection', 'kongens-have': 'Rosenborg Castle Gardens', 'dac': 'BLOX',
+ 'cisternerne': 'Cisternerne', 'blue-planet': 'National Aquarium Denmark', 'grundtvig-church': "Grundtvig's Church",
+ 'walk-lakes': 'The Lakes, Copenhagen', 'dragor': 'Dragør', 'roskilde-cathedral': 'Roskilde Cathedral',
 }
+# Optional second argument: comma-separated ids to fetch (default: all).
+if len(sys.argv) > 2:
+    TITLES = {k: v for k, v in TITLES.items() if k in sys.argv[2].split(',')}
 def get(url, params):
     u = url + '?' + urllib.parse.urlencode(params)
     for i in range(3):

@@ -52,9 +52,18 @@ const FREE_IDS = [
   'walk-nyboder-amalienborg',
   'walk-norrebro',
   'dyrehaven',
+  'city-hall', // the hall; the tower tour is separate
+  'holmens-church',
+  'david-collection',
+  'kongens-have',
+  'grundtvig-church',
+  'walk-lakes',
+  'dragor',
 ]
 
 const C = '2026-10-23'
+/** Places added later. */
+const C2 = '2026-10-24'
 
 type Paid = PaidPricing
 
@@ -148,6 +157,43 @@ const PAID: Record<string, Paid> = {
     source: 'https://www.vikingeskibsmuseet.dk/en/visit-the-museum/opening-hours-and-admission',
   }),
   frederiksborg: paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://frederiksborg.dk/en/visit/' }),
+  hirschsprung: paid({ adult: 110, youth: 75, includedInCopenhagenCard: true, source: 'https://www.hirschsprung.dk/en/', checkedOn: C2 }),
+  dac: paid({
+    adult: 135,
+    student: 60,
+    youth: 60,
+    includedInCopenhagenCard: true,
+    note: { cs: 'Online o 10 % levněji.', en: '10% cheaper online.' },
+    source: 'https://dac.dk/en/visit/',
+    checkedOn: C2,
+  }),
+  cisternerne: paid({
+    adult: null,
+    freeUnderAge: null,
+    includedInCopenhagenCard: true,
+    source: 'https://frederiksbergmuseerne.dk/da/billetter/',
+    checkedOn: C2,
+  }),
+  'roskilde-cathedral': paid({
+    adult: 80,
+    senior: 60,
+    student: 60,
+    includedInCopenhagenCard: true,
+    note: { cs: 'Sleva pro seniory od 67 let.', en: 'Senior discount from 67.' },
+    source: 'https://www.roskildedomkirke.dk/besoeg',
+    checkedOn: C2,
+  }),
+  'blue-planet': paid({
+    adult: null,
+    freeUnderAge: 3,
+    includedInCopenhagenCard: false,
+    note: {
+      cs: 'Dospělí 249–259 DKK, děti 3–11 let 131–136 DKK podle data; online o 30 DKK levněji.',
+      en: 'Adults 249–259 DKK, ages 3–11 131–136 DKK depending on the date; 30 DKK cheaper online.',
+    },
+    source: 'https://denblaaplanet.dk/en/visit-us/prices-and-opening-hours/',
+    checkedOn: C2,
+  }),
 }
 
 export function pricingFor(placeId: string): Pricing {
