@@ -22,15 +22,24 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 ## Architecture
 
 - **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/costs`, `#/info`, `#/print?d=`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
-- **Data** (`src/data/`): `types.ts` is the model. `places.ts` is the catalogue, with helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`. `prices.ts` gives `pricingFor(id)`; until phase 5, paid places return all-`null` prices.
+- **Data** (`src/data/`):
+  - `types.ts` is the model.
+  - `places.ts` is the catalogue: 60 places in sections (centre, Frederiksstaden, Christianshavn, Nørrebro/Vesterbro/Frederiksberg, food & coffee, walks, day trips). It has helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`.
+  - `prices.ts` gives `pricingFor(id)`.
+  - `images.ts` holds the photos and `practical.ts` the Info page.
+  - `*.geo.json` are fixed OSM extracts: transit, landmarks, amenities.
 - **Pure logic** (`src/logic/`, unit-tested):
-  - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight
+  - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight. `cphToUtc` and `dstShiftAfter` are for calendar export and DST reminders.
   - `hours.ts`: seasonal opening hours
-  - `geo.ts`: haversine × 1.3 detour estimate, Google Maps links, and `rejseplanenUrl`. That builds a rejseplanen.dk/web/ search with `SKOORD/SX/SY` and `ZKOORD/ZX/ZY` in micro-degrees, plus `date=DD.MM.YYYY`, `time=HH:MM` and `timeSel=depart`, or `SCURRENT=1` to start from the phone's location; this format was checked against the live site on 2026-10-24. Transit legs in Plan and Today get a Rejseplanen button (`components/legTrip.ts` gives the departure time and English names). Today also has "Home by public transport".
+  - `geo.ts`: haversine × 1.3 detour estimate, Google Maps links, and `rejseplanenUrl`.
+    - The Rejseplanen link is a rejseplanen.dk/web/ search with `SKOORD/SX/SY` and `ZKOORD/ZX/ZY` in micro-degrees, plus `date=DD.MM.YYYY`, `time=HH:MM` and `timeSel=depart`, or `SCURRENT=1` to start from the phone's location.
+    - The format isn't documented: it was read from their web app and checked against the live site on 2026-10-24.
+    - Transit legs in Plan and Today get a Rejseplanen button (`components/legTrip.ts` gives the departure time and English names, because Rejseplanen mangles Czech letters). Today also has "Home by public transport".
   - `timeline.ts`: day schedule, legs and warnings. Street walks enter at their first waypoint and exit at their last. `TimelineOptions.routes` (keyed by `legKey`) is where real Valhalla legs replace the estimates.
   - `filters.ts`: catalogue filtering and sorting
   - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.
   - `food.ts`: lunch. `lunchAfter` picks the stop after which the day breaks for lunch (none if a food stop is planned). `foodNear`/`lunchOptions` list open `food-market` places nearby, and `LunchHint` shows them in Plan (with "add here") and Today.
+  - Also unit-tested, and described in their sections below: `weatherFit.ts`, `weatherSwap.ts`, `costs.ts`, `tiles.ts`, `amenities.ts`, `reminders.ts`, `ics.ts`, `sketch.ts`, `shareLocation.ts`, `polyline.ts`.
   - `suggest.ts`: "Suggest a day", a greedy fill. Each step picks the best-scoring unplanned place that's open for the whole visit, done before sunset if daylight-only, and within the day's hours/km including the way home. Food places are only picked for an arrival between 11:30 and 13:30, one per day. Score = rating, must-see bonus and lunch bonus, minus distance (which keeps the day clustered). `extraScore` is the hook for phase 4 weather.
 - **State** (`src/state/`):
   - `store.ts`: reducer, context, `useActiveTrip`; persisted under `cph:*` localStorage keys via `storage.ts`
@@ -83,12 +92,33 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Images use `crossOrigin="anonymous"` so cached photos aren't opaque (opaque responses use a lot of storage quota).
   - "Save for offline" (`state/offlinePack.ts`, `OfflineCard` in Today and trip settings): it uses `routeStore.ensure` to route every planned day (`routeSpecs` from `logic/timeline.ts`, the same specs `useTimeline` requests). It then writes map tiles for the whole guide (`logic/tiles.ts`, z10–14; OpenFreeMap stops at z14) and the photos straight into Cache Storage. That's about 30 MB. The result, with a `planSig` to detect later plan changes, is stored as `cph:offline`.
   - `UpdatePrompt` offers new versions instead of reloading. `OfflineBanner` shows when `navigator.onLine` is false. `LiveRoute` draws a dashed direction line when there's no route.
-- **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
+- **UI**: bottom tabs Guide / Plan / Today / Costs / Info (`BottomNav`). `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status
 
-Phases 1–6 are done. Route builder: Guide `?r=id1,id2`. Live route from your location: inside the Today next-stop card. A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`). Entry/transport cost totals per day wait for phase 5 prices. Unconfirmed prices (null): Tivoli (date-dependent, "from 200"), Rosenborg, Frederiksborg, canal-tour child fares. Offline: see the Offline section above.
+Phases 1–6 of the spec are done. Later additions, each described above:
+- food & coffee places with a lunch-nearby hint
+- toilets and benches on the map
+- rain/wind swap suggestions
+- Rejseplanen links
+- the Info page
+- reminders with calendar export
+- printable day sheets
+- "share where we are"
+
+Other entry points:
+- Route builder: Guide `?r=id1,id2`.
+- Live route from your location: inside the Today next-stop card.
+- A bare site URL opens `#/today` when the active trip has stops today (`OpenToday`).
+
+Unconfirmed prices (null, shown as "price unknown" or as a note):
+- Tivoli (date-dependent, "from 200")
+- Rosenborg
+- Frederiksborg
+- canal-tour child fares
+- Cisternerne
+- Den Blå Planet (date-dependent; range in a note)
 
 ## Required workflow (from the spec)
 
@@ -110,9 +140,12 @@ Phases 1–6 are done. Route builder: Guide `?r=id1,id2`. Live route from your l
 ## Data rules
 
 - Never invent prices. A price that can't be confirmed on an official site is `null`, and the UI shows "price unknown". Every price has a `source` URL and a `checkedOn` date. List any unconfirmed prices in the summary to the user.
-- Every opening time starts as `verifyHours: true`.
+- Every opening time starts as `verifyHours: true`. Set it to `false` only after checking the official site (OpenStreetMap hours stay `true`).
+- Facts on the Info page (`data/practical.ts`) need an official source; leave out what can't be sourced.
 - TypeScript strict mode, with no `any` in the data model.
 
 ## Users
 
 The users are Czech parents walking around on phones, sometimes without the site owner. That means a Czech UI (CS/EN toggle, `?lang=cs` override), large readable text, clear turn-by-turn directions and offline-friendly behaviour. The "Today" view is their main entry point. About 14–15 km of walking a day is fine for them.
+
+Keep the UI wording general: nothing in the app names the site owner. The header links to "Main site", and examples use "Hotel" / "Our flat".
