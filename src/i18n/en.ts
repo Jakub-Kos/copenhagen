@@ -364,6 +364,16 @@ export const en = {
   sheetNoTicket: 'no entry fee',
   sheetHelpline: 'medical helpline',
   sheetEmbassy: 'Czech Embassy',
+
+  // Share where we are
+  shareWhere: 'Share where we are',
+  shareHere: '📍 We are here ({time}{acc}):',
+  shareNext: '➡️ Next: {place}, arriving ~{time}',
+  shareHome: '🏠 Staying at: {home}',
+  shareSent: 'Sent.',
+  shareCopied: 'Copied – paste it into a message.',
+  shareSms: 'Send as SMS',
+  sharePrivacy: 'The position is read once and goes only into the message you send. The app stores and sends nothing.',
 }
 
 export type Dict = typeof en

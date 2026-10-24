@@ -354,4 +354,14 @@ export const cs: Dict = {
   sheetNoTicket: 'bez vstupného',
   sheetHelpline: 'lékařská linka',
   sheetEmbassy: 'velvyslanectví ČR',
+
+  // Share where we are
+  shareWhere: 'Sdílet, kde jsme',
+  shareHere: '📍 Jsme tady ({time}{acc}):',
+  shareNext: '➡️ Další zastávka: {place}, příchod ~{time}',
+  shareHome: '🏠 Bydlíme: {home}',
+  shareSent: 'Odesláno.',
+  shareCopied: 'Zkopírováno – vložte do zprávy.',
+  shareSms: 'Poslat jako SMS',
+  sharePrivacy: 'Poloha se zjistí jen jednou a jde jen do zprávy, kterou sami pošlete. Aplikace nic neukládá ani neodesílá.',
 }

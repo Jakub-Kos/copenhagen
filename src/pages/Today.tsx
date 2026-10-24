@@ -9,6 +9,7 @@ import { LunchHint } from '@/components/LunchHint'
 import { ToiletNearby } from '@/components/ToiletNearby'
 import { OfflineCard } from '@/components/OfflineCard'
 import { Reminders } from '@/components/Reminders'
+import { ShareLocation } from '@/components/ShareLocation'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
@@ -54,6 +55,7 @@ export default function Today() {
       <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
         <p>{t('notInTrip', { name: trip.name })}</p>
         <Reminders trip={trip} />
+        <ShareLocation home={trip.homeBase?.label} />
         {next && (
           <p>
             {t('nextDay', { day: formatDayLong(next, lang) })} –{' '}
@@ -216,6 +218,11 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
           <TrainFront size={18} /> {t('transitHome')}
         </a>
       )}
+
+      <ShareLocation
+        next={next ? { name: bi(next.place.name), arrive: next.arrive, coords: entryPoint(next.place) } : null}
+        home={trip.homeBase?.label}
+      />
 
       <OfflineCard trip={trip} compact />
     </div>
