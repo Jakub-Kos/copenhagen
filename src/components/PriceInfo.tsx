@@ -9,7 +9,7 @@ import { formatDkk } from './money'
 export function PriceInfo({ pricing: p }: { pricing: Pricing }) {
   const { t, bi, lang } = useT()
   const trip = useActiveTrip()
-  if (p.free) return <span>{t('priceFree')}</span>
+  if (p.free) return <span>{t(p.noTicket ? 'priceNoTicket' : 'priceFree')}</span>
 
   const group = trip?.group ?? []
   const each = group.map((x) => ({ x, price: entryPrice(p, x) }))

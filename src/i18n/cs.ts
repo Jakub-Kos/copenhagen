@@ -2,7 +2,7 @@ import type { Dict } from './en'
 
 export const cs: Dict = {
   appTitle: 'Kodaň',
-  backToSite: 'Jakub Kos',
+  backToSite: '← Hlavní web',
   largeText: 'Větší písmo',
   navGuide: 'Průvodce',
   navPlan: 'Plán',
@@ -75,7 +75,7 @@ export const cs: Dict = {
   'kind.street-walk': 'Procházka',
   'kind.park': 'Park',
   'kind.viewpoint': 'Vyhlídka',
-  'kind.food-market': 'Jídlo',
+  'kind.food-market': 'Jídlo a káva',
   'kind.neighbourhood': 'Čtvrť',
   'kind.day-trip': 'Výlet',
 
@@ -144,6 +144,9 @@ export const cs: Dict = {
   price: 'Cena',
   priceFree: 'Zdarma',
   priceUnknown: 'Cena neznámá',
+  priceNoTicket: 'Bez vstupného – platíte jen útratu',
+  lunchNearby: 'Oběd poblíž',
+  addHere: 'Přidat sem',
   directions: 'Navigovat',
   addToDay: 'Přidat do dne',
   plannedOn: 'V plánu: {days}',
@@ -178,7 +181,7 @@ export const cs: Dict = {
   shareHint: 'Odkaz obsahuje celý výlet včetně ubytování. Posílejte ho jen účastníkům.',
   tripSettings: 'Nastavení výletu',
   homeBase: 'Ubytování',
-  homeBaseLabel: 'Název (např. „U Jakuba“)',
+  homeBaseLabel: 'Název (např. „Byt“, „Hotel“)',
   homeBaseCoords: 'Souřadnice (zkopírujte z Google Map)',
   useMyLocation: 'Použít mou polohu',
   homeBaseHint: 'Uloží se jen v tomto prohlížeči a ve sdílených odkazech, nikdy na veřejném webu.',

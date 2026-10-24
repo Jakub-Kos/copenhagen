@@ -21,6 +21,11 @@ export function addStop(t: Trip, d: IsoDate, placeId: string, legMode: LegMode =
   return withStops(t, d, (s) => [...s, { id: newId(), placeId, legMode, visitMin: null }])
 }
 
+/** Inserts a stop at `index` (0 = first). */
+export function insertStop(t: Trip, d: IsoDate, index: number, placeId: string, legMode: LegMode = 'walk'): Trip {
+  return withStops(t, d, (s) => [...s.slice(0, index), { id: newId(), placeId, legMode, visitMin: null }, ...s.slice(index)])
+}
+
 export const removeStop = (t: Trip, d: IsoDate, stopId: string): Trip =>
   withStops(t, d, (s) => s.filter((x) => x.id !== stopId))
 

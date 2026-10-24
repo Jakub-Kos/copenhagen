@@ -61,6 +61,20 @@ const FREE_IDS = [
   'dragor',
 ]
 
+/** Food halls, cafés and restaurants: no entry fee, only what you buy. */
+const NO_TICKET_IDS = [
+  'torvehallerne',
+  'reffen',
+  'la-glace',
+  'sankt-peders-bageri',
+  'cafe-paludan',
+  'schonnemann',
+  'aamanns',
+  'told-snaps',
+  'palaegade',
+  'lagkagehuset-christianshavn',
+]
+
 const C = '2026-10-23'
 /** Places added later. */
 const C2 = '2026-10-24'
@@ -197,6 +211,7 @@ const PAID: Record<string, Paid> = {
 }
 
 export function pricingFor(placeId: string): Pricing {
+  if (NO_TICKET_IDS.includes(placeId)) return { free: true, noTicket: true, extras: [], source: null, checkedOn: null }
   if (FREE_IDS.includes(placeId)) return free()
   return PAID[placeId] ?? unknown()
 }

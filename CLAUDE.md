@@ -30,7 +30,8 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `timeline.ts`: day schedule, legs and warnings. Street walks enter at their first waypoint and exit at their last. `TimelineOptions.routes` (keyed by `legKey`) is where real Valhalla legs replace the estimates.
   - `filters.ts`: catalogue filtering and sorting
   - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.
-  - `suggest.ts`: "Suggest a day", a greedy fill. Each step picks the best-scoring unplanned place that's open for the whole visit, done before sunset if daylight-only, and within the day's hours/km including the way home. Score = rating, must-see bonus and lunch bonus, minus distance (which keeps the day clustered). `extraScore` is the hook for phase 4 weather.
+  - `food.ts`: lunch. `lunchAfter` picks the stop after which the day breaks for lunch (none if a food stop is planned). `foodNear`/`lunchOptions` list open `food-market` places nearby, and `LunchHint` shows them in Plan (with "add here") and Today.
+  - `suggest.ts`: "Suggest a day", a greedy fill. Each step picks the best-scoring unplanned place that's open for the whole visit, done before sunset if daylight-only, and within the day's hours/km including the way home. Food places are only picked for an arrival between 11:30 and 13:30, one per day. Score = rating, must-see bonus and lunch bonus, minus distance (which keeps the day clustered). `extraScore` is the hook for phase 4 weather.
 - **State** (`src/state/`):
   - `store.ts`: reducer, context, `useActiveTrip`; persisted under `cph:*` localStorage keys via `storage.ts`
   - `tripOps.ts`: pure trip edits. Call `resuggestLegModes` after any reorder (up/down, drag & drop, optimise).
@@ -48,7 +49,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Wiring: `useTimeline` passes `weatherFor` so `buildTimeline` emits `rain`/`wind` warnings, and `DayPlanner` passes the fit score as `suggestDay`'s `extraScore`.
 - **Costs** (phase 5):
   - Data:
-    - `data/prices.ts` holds entry prices, with `paid()` defaults: students/seniors fall back to the adult price, under 18 free unless stated.
+    - `data/prices.ts` holds entry prices. Food places (kind `food-market`: food halls, cafés, bakeries, smørrebrød) are `NO_TICKET_IDS`, i.e. free with `noTicket: true` ("you pay for what you eat"); never put menu prices in. `paid()` defaults: students/seniors fall back to the adult price, under 18 free unless stated.
     - `data/transport.ts` holds the DOT single-ticket zone fares, City Pass Small/Large, Copenhagen Card prices and `estimateZones()` (distance-based, shown as "odhad").
   - Logic: `logic/costs.ts` (pure, tested):
     - `entryPrice`/`singleFares` handle per-traveller rules (2 under-12s free per adult, 67+ discount).

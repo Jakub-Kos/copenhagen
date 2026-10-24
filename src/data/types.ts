@@ -142,6 +142,8 @@ export interface PaidPricing {
 
 export interface FreePricing {
   free: true
+  /** Cafés, restaurants, food halls: no entry fee, you pay for what you eat. */
+  noTicket?: boolean
   extras: ExtraItem[]
   source: string | null
   checkedOn: string | null

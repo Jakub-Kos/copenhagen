@@ -7,6 +7,7 @@
 import type { LatLng, Place } from '@/data/types'
 import type { DayPlan, LegMode } from '@/state/tripTypes'
 import { CITY_CENTRE, estimateWalkM, walkMinutes } from './geo'
+import { LUNCH_FROM, LUNCH_TO } from './food'
 import { hoursOn, isOpenDuring } from './hours'
 import { buildTimeline, entryPoint, exitPoint, innerWalkM, transitMinutes } from './timeline'
 import type { IsoDate } from './time'
@@ -34,8 +35,6 @@ export interface Suggestion {
 }
 
 const KM_PENALTY = 2
-const LUNCH_FROM = 11 * 60 + 30
-const LUNCH_TO = 13 * 60 + 30
 
 export function suggestDay(i: SuggestInput): Suggestion[] {
   const lookup = new Map(i.candidates.map((p) => [p.id, p]))
@@ -89,8 +88,11 @@ export function suggestDay(i: SuggestInput): Suggestion[] {
       // While it is light, prefer the places that need daylight.
       if (p.bestTime.includes('daylight-only') && arrive < sunset - 120) score += 1.5
       if (p.bestTime.includes('evening') && arrive >= sunset) score += 1.5
-      // A food stop around lunchtime.
-      if (p.kind === 'food-market' && arrive >= LUNCH_FROM && arrive <= LUNCH_TO) score += 8
+      // One food stop, only around lunchtime.
+      if (p.kind === 'food-market') {
+        if (arrive < LUNCH_FROM || arrive > LUNCH_TO) continue
+        score += 8
+      }
       score += i.extraScore?.(p, arrive, leave) ?? 0
 
       if (!best || score > best.score) best = { p, score, mode, legM, leave }

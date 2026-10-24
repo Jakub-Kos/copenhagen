@@ -13,6 +13,7 @@ import { useStore } from '@/state/store'
 import {
   addStop,
   dayOf,
+  insertStop,
   tripDates,
   moveStop,
   moveStopTo,
@@ -26,6 +27,7 @@ import {
 import type { Trip } from '@/state/tripTypes'
 import { KIND_ICON } from './kindStyle'
 import { LegRow } from './LegRow'
+import { LunchHint } from './LunchHint'
 import { Directions } from './Directions'
 import { MapView } from './MapView'
 import { Thumb } from './Thumb'
@@ -263,6 +265,13 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                     </Button>
                   </div>
                 </div>
+                <LunchHint
+                  tl={tl}
+                  date={date}
+                  speedKmh={trip.walkingSpeedKmh}
+                  index={i}
+                  onAdd={(placeId) => save(resuggestLegModes(insertStop(trip, date, i + 1, placeId), date))}
+                />
               </li>
             )
           })}
