@@ -3,6 +3,7 @@ import { pricingFor } from '@/data/prices'
 import { haversineM } from './geo'
 import { isOpenOnDay } from './hours'
 import type { IsoDate } from './time'
+import { nameMatches } from './search'
 
 export type SortKey = 'rating' | 'duration' | 'distance' | 'name'
 
@@ -35,13 +36,8 @@ export const DEFAULT_FILTERS: Filters = {
   sort: 'rating',
 }
 
-const fold = (s: string) => s.toLocaleLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
-
 export function matches(p: Place, f: Filters): boolean {
-  if (f.q) {
-    const q = fold(f.q)
-    if (!fold(`${p.name.cs} ${p.name.en}`).includes(q)) return false
-  }
+  if (f.q && !nameMatches(p, f.q)) return false
   if (f.kinds.length && !f.kinds.includes(p.kind)) return false
   if (f.tags.length && !f.tags.some((t) => p.tags.includes(t))) return false
   if (p.myRating < f.minRating) return false

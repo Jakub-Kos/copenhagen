@@ -381,6 +381,16 @@ export const en = {
   gettingThere: 'Getting there',
   walkStart: 'Start',
   walkLength: '{km} km along the route',
+
+  // Place picker and steppers
+  addPlaceSearch: 'Add a place – type a name…',
+  nearbyFirst: 'Nearest to the last stop:',
+  noMatch: 'Nothing found',
+  alreadyPlanned: 'planned',
+  earlier: 'Earlier',
+  later: 'Later',
+  shorter: 'Shorter',
+  longer: 'Longer',
 }
 
 export type Dict = typeof en

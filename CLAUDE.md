@@ -41,6 +41,8 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
     - Transit legs in Plan and Today get a Rejseplanen button (`components/legTrip.ts` gives the departure time and English names, because Rejseplanen mangles Czech letters). Today also has "Home by public transport".
   - `timeline.ts`: day schedule, legs and warnings. Street walks enter at their first waypoint and exit at their last. `TimelineOptions.routes` (keyed by `legKey`) is where real Valhalla legs replace the estimates.
   - `filters.ts`: catalogue filtering and sorting
+  - `search.ts`: `fold` (case, accents, ø→o, æ→ae), `nameMatches` (every word in the CS or EN name) and `searchPlaces` (prefix matches first, then nearest; an empty query gives the nearest places). It backs the Guide search and `PlacePicker`, the type-to-add box in the Plan day.
+  - Plan inputs need no typing: `components/Steppers.tsx` has `StartTimePicker` (±15 min plus quick times) and `MinutesStepper` (visit length in 15-minute steps).
   - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.
   - `food.ts`: lunch. `lunchAfter` picks the stop after which the day breaks for lunch (none if a food stop is planned). `foodNear`/`lunchOptions` list open `food-market` places nearby, and `LunchHint` shows them in Plan (with "add here") and Today.
   - `stations.ts`: `nearestStations` from the transit extract (metro/S-tog/regional, with lines). It feeds "Getting there" in `PlaceDetail`.

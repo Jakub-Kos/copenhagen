@@ -5,7 +5,7 @@ import { placeById, places } from '@/data/places'
 import { useT } from '@/i18n/useT'
 import { steps } from '@/logic/geo'
 import { suggestDay } from '@/logic/suggest'
-import { entryPoint, suggestLegMode } from '@/logic/timeline'
+import { entryPoint, exitPoint, suggestLegMode } from '@/logic/timeline'
 import { fitFor } from '@/logic/weatherFit'
 import { costItems, sumItems } from '@/logic/costs'
 import { optimizedOrder } from '@/services/valhalla'
@@ -25,15 +25,16 @@ import {
   updateStop,
 } from '@/state/tripOps'
 import type { Trip } from '@/state/tripTypes'
-import { KIND_ICON } from './kindStyle'
 import { LegRow } from './LegRow'
 import { legTripHome, legTripInto } from './legTrip'
 import { LunchHint } from './LunchHint'
+import { PlacePicker } from './PlacePicker'
+import { MinutesStepper, StartTimePicker } from './Steppers'
 import { Directions } from './Directions'
 import { MapView } from './LazyMap'
 import { Thumb } from './Thumb'
-import { Button, Field } from './ui'
-import { cx, inputCls } from './cls'
+import { Button } from './ui'
+import { cx } from './cls'
 import { formatDkk } from './money'
 import { useForecast } from './useForecast'
 import { useTimeline } from './useTimeline'
@@ -70,7 +71,6 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
     }
     return m
   }, [tl.warnings])
-  const sortedPlaces = useMemo(() => [...places].sort((a, b) => a.name[lang].localeCompare(b.name[lang], lang)), [lang])
 
   const planned = useMemo(() => plannedPlaces(trip), [trip])
   const unplannedMustSees = useMemo(() => places.filter((p) => p.mustSee && !planned.has(p.id)), [planned])
@@ -143,15 +143,8 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
     <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_1fr] md:items-start">
       <div className="flex flex-col gap-3">
         <WeatherStrip date={date} />
-        <div className="flex items-end gap-3">
-          <Field label={t('startTime')}>
-            <input
-              type="time"
-              className={inputCls}
-              value={day.startTime}
-              onChange={(e) => e.target.value && save(setStartTime(trip, date, e.target.value))}
-            />
-          </Field>
+        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
+          <StartTimePicker value={day.startTime} onChange={(v) => save(setStartTime(trip, date, v))} />
           <div className="pb-2 text-sm text-slate-500 dark:text-slate-400">
             {trip.homeBase && <div>🏠 {trip.homeBase.label}</div>}
             {tl.sunset !== null && <div>🌇 {t('sunset', { t: fromMinutes(tl.sunset) })}</div>}
@@ -231,21 +224,11 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                   </div>
                   {(warns.includes('rain') || warns.includes('wind')) && <WeatherSwap trip={trip} date={date} stop={s} />}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <label className="flex items-center gap-1 text-sm" title={t('visitMin')}>
-                      ⏱
-                      <input
-                        type="number"
-                        min={5}
-                        step={5}
-                        aria-label={t('visitMin')}
-                        className="w-16 rounded-md border border-slate-300 bg-white px-2 py-1 dark:border-slate-600 dark:bg-slate-900"
-                        value={stop.visitMin ?? s.place.durationMin}
-                        onChange={(e) =>
-                          save(updateStop(trip, date, s.stopId, { visitMin: Number(e.target.value) > 0 ? Number(e.target.value) : null }))
-                        }
-                      />
-                      min
-                    </label>
+                    <MinutesStepper
+                      label={t('visitMin')}
+                      value={stop.visitMin ?? s.place.durationMin}
+                      onChange={(m) => save(updateStop(trip, date, s.stopId, { visitMin: m }))}
+                    />
                     <span className="ml-auto" />
                     <Button
                       variant="ghost"
@@ -321,15 +304,12 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
         <p className="text-xs text-slate-500 dark:text-slate-400">{t('suggestHint')}</p>
         {notice && <p className="text-sm text-amber-700 dark:text-amber-400">{t(notice)}</p>}
 
-        <select className={inputCls} value="" onChange={(e) => e.target.value && add(e.target.value)} aria-label={t('addPlace')}>
-          <option value="">➕ {t('addPlace')}</option>
-          {sortedPlaces.map((p) => (
-            <option key={p.id} value={p.id}>
-              {KIND_ICON[p.kind]} {bi(p.name)}
-              {planned.has(p.id) ? ' ✓' : ''}
-            </option>
-          ))}
-        </select>
+        <PlacePicker
+          date={date}
+          near={tl.stops.length ? exitPoint(tl.stops[tl.stops.length - 1].place) : (trip.homeBase?.coords ?? null)}
+          planned={planned}
+          onPick={add}
+        />
 
         {tl.stops.length > 0 && (
           <div className="rounded-lg bg-slate-100 p-3 text-sm dark:bg-slate-900">

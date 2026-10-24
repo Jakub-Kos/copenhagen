@@ -371,4 +371,14 @@ export const cs: Dict = {
   gettingThere: 'Jak se tam dostat',
   walkStart: 'Start',
   walkLength: '{km} km po trase',
+
+  // Place picker and steppers
+  addPlaceSearch: 'Přidat místo – napište název…',
+  nearbyFirst: 'Nejblíž k poslední zastávce:',
+  noMatch: 'Nic nenalezeno',
+  alreadyPlanned: 'v plánu',
+  earlier: 'Dřív',
+  later: 'Později',
+  shorter: 'Kratší',
+  longer: 'Delší',
 }
