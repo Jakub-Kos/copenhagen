@@ -12,6 +12,7 @@ import addresses from '@/data/addresses.json'
 import { highlights } from '@/data/details'
 import { walkMetres } from '@/data/walks'
 import { nearestStations } from '@/logic/stations'
+import { stationsData, useLazy } from './useLazy'
 import { useActiveTrip, useStore } from '@/state/store'
 import { addStop, dayOf, plannedPlaces, tripDates } from '@/state/tripOps'
 import { KIND_ICON, WEATHER_ICON } from './kindStyle'
@@ -52,7 +53,8 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
   const img = imageFor(p.id)
   const start = p.waypoints?.[0] ?? p.coords
   const address = (addresses as Record<string, string>)[p.id]
-  const stations = nearestStations(start)
+  const stationList = useLazy(stationsData)
+  const stations = stationList ? nearestStations(start, stationList) : []
   const walkM = walkMetres(p.id)
   const closeButton = (
     <button

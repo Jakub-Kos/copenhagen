@@ -7,7 +7,8 @@ import type { LatLng } from '@/data/types'
 import { pricingFor } from '@/data/prices'
 import { FilterPanel } from '@/components/FilterPanel'
 import { WEATHER_ICON } from '@/components/kindStyle'
-import { MapView, type MapLine } from '@/components/MapView'
+import { MapView } from '@/components/LazyMap'
+import type { MapLine } from '@/components/MapView'
 import { PlaceDetail } from '@/components/PlaceDetail'
 import { PlaceSheet } from '@/components/PlaceSheet'
 import { MapLegend } from '@/components/MapLegend'
@@ -29,6 +30,8 @@ function formatKm(m: number): string {
   return m < 1000 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(m < 10000 ? 1 : 0)} km`
 }
 
+
+const CITY_RADIUS_M = 8000
 export default function Guide() {
   const { t, bi, lang } = useT()
   const trip = useActiveTrip()
@@ -105,7 +108,8 @@ export default function Guide() {
     [list, selectedId],
   )
 
-  const cityPoints = useMemo(() => places.filter((p) => p.kind !== 'day-trip').map((p) => p.coords), [])
+  // The opening view: the city, not the day-trip towns (some walks are out there too).
+  const cityPoints = useMemo(() => places.filter((p) => haversineM(p.coords, CITY_CENTRE) <= CITY_RADIUS_M).map((p) => p.coords), [])
 
   const select = (id: string | null) =>
     setParams(

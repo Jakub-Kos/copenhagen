@@ -1,6 +1,7 @@
-// Nearest metro / S-tog / regional stations, from the OSM transit extract (pure).
+// Nearest metro / S-tog / regional stations, from the OSM transit extract (pure; the extract
+// itself is loaded on demand, see data/geoData.ts).
 
-import transit from '@/data/transit.geo.json'
+import type { FeatureCollection } from 'geojson'
 import type { LatLng } from '@/data/types'
 import { estimateWalkM } from './geo'
 
@@ -16,18 +17,20 @@ interface RawFeature {
   properties: { mode?: string; name?: string; lines?: string }
 }
 
-export const stations: Station[] = (transit.features as RawFeature[]).flatMap((f) => {
-  const { mode, name, lines } = f.properties
-  if (f.geometry.type !== 'Point' || !name || (mode !== 'metro' && mode !== 'stog' && mode !== 'regional')) return []
-  const [lng, lat] = f.geometry.coordinates as [number, number]
-  return [{ name, mode, lines: lines ?? '', coords: { lat, lng } }]
-})
+export function parseStations(transit: FeatureCollection): Station[] {
+  return (transit.features as unknown as RawFeature[]).flatMap((f) => {
+    const { mode, name, lines } = f.properties
+    if (f.geometry.type !== 'Point' || !name || (mode !== 'metro' && mode !== 'stog' && mode !== 'regional')) return []
+    const [lng, lat] = f.geometry.coordinates as [number, number]
+    return [{ name, mode, lines: lines ?? '', coords: { lat, lng } }]
+  })
+}
 
 /**
  * Up to `max` stations within walking range, nearest first, one per name (a metro and an
  * S-tog station of the same name both count, e.g. Nørreport).
  */
-export function nearestStations(p: LatLng, max = 2, maxMetres = 1500, list: Station[] = stations): (Station & { metres: number })[] {
+export function nearestStations(p: LatLng, list: Station[], max = 2, maxMetres = 1500): (Station & { metres: number })[] {
   const seen = new Set<string>()
   return list
     .map((s) => ({ ...s, metres: estimateWalkM(p, s.coords) }))

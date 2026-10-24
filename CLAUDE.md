@@ -99,6 +99,16 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - "Save for offline" (`state/offlinePack.ts`, `OfflineCard` in Today and trip settings): it uses `routeStore.ensure` to route every planned day (`routeSpecs` from `logic/timeline.ts`, the same specs `useTimeline` requests). It then writes map tiles for the whole guide (`logic/tiles.ts`, z10–14; OpenFreeMap stops at z14) and the photos straight into Cache Storage. That's about 30 MB. The result, with a `planSig` to detect later plan changes, is stored as `cph:offline`.
   - `UpdatePrompt` offers new versions instead of reloading. `OfflineBanner` shows when `navigator.onLine` is false. `LiveRoute` draws a dashed direction line when there's no route.
 - **UI**: bottom tabs Guide / Plan / Today / Costs / Info (`BottomNav`). `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
+- **Loading performance**:
+  - The first load is kept small (main chunk about 175 KB gz).
+  - MapLibre loads through `components/LazyMap.tsx`, which pages import as `MapView`. The download starts when the module runs, and a placeholder is shown until it's ready. Import `MapView.tsx` directly only for types.
+  - Plan, Costs, Info, Print and ShareImport are `React.lazy` routes.
+  - The big map extracts (transit, landmarks, amenities) load on demand via `data/geoData.ts` (`lazy()` with `load`/`peek`):
+    - `mapStyle` adds empty sources and fills them in when the data arrives.
+    - `PlaceDetail` and `ToiletNearby` use `useLazy(stationsData | toiletsData)` from `components/useLazy.ts`.
+    - `logic/stations.ts` and `logic/amenities.ts` take the parsed list as a parameter.
+  - List thumbnails (`Thumb`) load only within 300 px of the screen (IntersectionObserver), with low fetch priority, so they don't compete with the map download. `thumb()` also turns small originals into 250 px Wikimedia thumbnails.
+  - All chunks are precached by the service worker, so offline is unaffected.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 
 ## Phase status

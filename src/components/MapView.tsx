@@ -21,7 +21,7 @@ export interface MapLine {
   style: 'walk' | 'walk-selected' | 'route' | 'estimate' | 'transit'
 }
 
-interface Props {
+export interface MapViewProps {
   places: Place[]
   selectedId?: string | null
   onSelect?: (id: string) => void
@@ -66,7 +66,7 @@ export function MapView({
   compactBelowZoom,
   walkToggle,
   className,
-}: Props) {
+}: MapViewProps) {
   const container = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const loaded = useRef(false)

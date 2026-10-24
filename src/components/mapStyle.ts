@@ -9,9 +9,7 @@
 import type maplibregl from 'maplibre-gl'
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
-import amenities from '@/data/amenities.geo.json'
-import landmarks from '@/data/landmarks.geo.json'
-import transit from '@/data/transit.geo.json'
+import { type Lazy, amenitiesData, landmarksData, transitData } from '@/data/geoData'
 
 const TILES = 'openmaptiles'
 export const TRANSIT_LAYERS = [
@@ -244,9 +242,10 @@ export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible:
     }
   }
 
-  if (!map.getSource('cph-transit')) map.addSource('cph-transit', { type: 'geojson', data: transit as FeatureCollection })
-  if (!map.getSource('cph-landmarks')) map.addSource('cph-landmarks', { type: 'geojson', data: landmarks as FeatureCollection })
-  if (!map.getSource('cph-amenities')) map.addSource('cph-amenities', { type: 'geojson', data: amenities as FeatureCollection })
+  // The overlay data loads on demand: start empty and fill in when it arrives.
+  addLazySource(map, 'cph-transit', transitData)
+  addLazySource(map, 'cph-landmarks', landmarksData)
+  addLazySource(map, 'cph-amenities', amenitiesData)
 
   // Greens just under the roads; landmarks and transport above the (3D) buildings but under
   // the labels that follow them.
@@ -263,6 +262,24 @@ export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible:
   }
   setVisible(map, TRANSIT_LAYERS, transitVisible)
   setVisible(map, AMENITY_LAYERS, amenitiesVisible)
+}
+
+const EMPTY: FeatureCollection = { type: 'FeatureCollection', features: [] }
+
+function addLazySource(map: maplibregl.Map, id: string, data: Lazy<FeatureCollection>): void {
+  if (map.getSource(id)) return
+  map.addSource(id, { type: 'geojson', data: data.peek() ?? EMPTY })
+  if (data.peek()) return
+  data.load().then(
+    (fc) => {
+      try {
+        ;(map.getSource(id) as maplibregl.GeoJSONSource | undefined)?.setData(fc)
+      } catch {
+        // The map was removed before the data arrived.
+      }
+    },
+    () => undefined, // offline without a cached copy: the overlay just stays empty
+  )
 }
 
 export function setVisible(map: maplibregl.Map, layers: string[], on: boolean): void {
