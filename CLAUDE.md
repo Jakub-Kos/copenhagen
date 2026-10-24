@@ -59,11 +59,15 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
     - `services/exchangeRates.ts` gets the ECB DKK→CZK rate via Frankfurter (cached 12 h).
     - `Trip.paid` holds the paid flags by cost-item key.
     - `Trip.czkRate` is a manual rate override.
-- **Map style**: `components/mapStyle.ts` adds its own layers to the OpenFreeMap `openmaptiles` source, so the same code works for the light and dark styles, whose layer ids differ:
-  - green areas
-  - rail/metro (tunnels dashed) and stations, toggled by the 🚇 button
-  - landmark building outlines, done with an `['in', ['id'], ...]` filter. Feature-state isn't used.
-  - It also hides POI symbols, shields and one-way arrows. Landmark and transport layers must sit above the 3D `building` layers.
+- **Map style**: `components/mapStyle.ts`. Hand-made overlays, so the code works with both OpenFreeMap styles (their layer ids differ):
+  - Green areas use the tiles.
+  - Metro/S-tog/regional lines and stations come from `data/transit.geo.json`. The metro uses its official colours, with M1/M2 and M3/M4 offset where they share track. The S-tog uses one slate colour. The 🚇 button toggles them.
+  - Landmark building outlines come from `data/landmarks.geo.json`.
+  - These GeoJSON files are fixed OSM extracts (see `scripts/README.md`) and don't change between zoom levels.
+  - Tile POIs, shields, one-way arrows and tile rail lines are hidden.
+  - Overlays sit above the 3D `building` layers.
+  - The Guide map passes `compactBelowZoom` (13.5): under it, markers become dots (CSS `.pins-small`).
+- **Photos**: `data/images.ts`, from Wikimedia Commons with author and licence. Always show the credit, as `PlaceDetail` does. Use `thumb(img, 250|500|960)` from `components/placeImage.ts`; Wikimedia only serves its standard widths.
 - **UI**: `MapView` wraps MapLibre with HTML markers (border = weather exposure, gold ring = must-see, badge = stop number/✓) and one GeoJSON `lines` source. `useTimeline` is shared by `DayPlanner` (Plan) and the Today page.
 - **i18n**: `i18n/en.ts` is the key source of truth (`cs.ts` is typed against it); use `useT()` → `t(key, vars)` and `bi(text)`.
 

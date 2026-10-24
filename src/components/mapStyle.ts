@@ -1,249 +1,222 @@
 // Adjustments on top of the OpenFreeMap styles: greener parks, a public-transport layer,
 // outlined landmark buildings, and fewer distractions. Works with both the light and dark
-// styles because it only adds its own layers on the shared `openmaptiles` source and hides
-// existing layers by kind, not by id.
+// styles: it only adds its own layers and hides existing ones by kind, not by id.
+//
+// Transport lines and landmark outlines are fixed GeoJSON extracted once from OpenStreetMap
+// (src/data/*.geo.json), so they look the same at every zoom instead of jumping with the
+// tiles' generalisation.
 
 import type maplibregl from 'maplibre-gl'
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl'
-import { places } from '@/data/places'
-import type { PlaceKind } from '@/data/types'
+import type { FeatureCollection } from 'geojson'
+import landmarks from '@/data/landmarks.geo.json'
+import transit from '@/data/transit.geo.json'
 
-const SRC = 'openmaptiles'
-const TRANSIT_LAYERS = ['cph-rail-tunnel', 'cph-rail', 'cph-metro-tunnel', 'cph-metro', 'cph-stations', 'cph-station-labels']
-const HIT_LAYER = 'cph-buildings-hit'
-const LANDMARK_LAYERS = ['cph-landmark-fill', 'cph-landmark-outline']
-const NO_LANDMARKS: ExpressionSpecification = ['in', ['id'], ['literal', []]]
-
-/** Kinds whose point usually sits inside one notable building. */
-const LANDMARK_KINDS: PlaceKind[] = ['sight', 'museum', 'viewpoint', 'food-market', 'day-trip']
+const TILES = 'openmaptiles'
+const TRANSIT_LAYERS = [
+  'cph-regional',
+  'cph-stog',
+  'cph-metro-casing',
+  'cph-metro',
+  'cph-stations',
+  'cph-station-labels',
+]
 
 interface Palette {
   park: string
   wood: string
   cemetery: string
-  rail: string
-  metro: string
+  casing: string
+  stog: string
+  regional: string
   stationFill: string
   label: string
   halo: string
-  landmark: string
+  landmarkLine: string
+  landmarkFill: string
 }
 
 const LIGHT: Palette = {
   park: '#b7dca1',
   wood: '#a2d189',
   cemetery: '#c7e0b5',
-  rail: '#475569',
-  metro: '#e11d48',
+  casing: '#ffffff',
+  stog: '#475569',
+  regional: '#94a3b8',
   stationFill: '#ffffff',
-  label: '#334155',
+  label: '#1e293b',
   halo: '#ffffff',
-  landmark: '#646cff',
+  landmarkLine: '#b45309',
+  landmarkFill: '#f59e0b',
 }
 
 const DARK: Palette = {
   park: '#1f3d29',
   wood: '#24472f',
   cemetery: '#22382a',
-  rail: '#94a3b8',
-  metro: '#fb7185',
+  casing: '#0b1220',
+  stog: '#94a3b8',
+  regional: '#64748b',
   stationFill: '#0f172a',
   label: '#e2e8f0',
   halo: '#0f172a',
-  landmark: '#8b93ff',
+  landmarkLine: '#fbbf24',
+  landmarkFill: '#f59e0b',
 }
 
-const width = (from: number, to: number): ExpressionSpecification => ['interpolate', ['linear'], ['zoom'], 11, from, 16, to]
-const isTunnel: ExpressionSpecification = ['==', ['get', 'brunnel'], 'tunnel']
-const notTunnel: ExpressionSpecification = ['!=', ['get', 'brunnel'], 'tunnel']
+const byZoom = (z11: number, z16: number): ExpressionSpecification => ['interpolate', ['linear'], ['zoom'], 11, z11, 16, z16]
+const isLine: ExpressionSpecification = ['==', ['geometry-type'], 'LineString']
+const isPoint: ExpressionSpecification = ['==', ['geometry-type'], 'Point']
+const mode = (m: string): ExpressionSpecification => ['==', ['get', 'mode'], m]
 
-function layers(c: Palette): LayerSpecification[] {
-  const greens: LayerSpecification[] = [
-    // --- Green areas (drawn under roads, see below).
+/** M1/M2 and M3/M4 share track; offset them so both colours show side by side. */
+const metroOffset: ExpressionSpecification = [
+  'interpolate',
+  ['linear'],
+  ['zoom'],
+  11,
+  ['match', ['get', 'ref'], 'M1', -1, 'M2', 1, 'M3', -1, 'M4', 1, 0],
+  16,
+  ['match', ['get', 'ref'], 'M1', -2.5, 'M2', 2.5, 'M3', -2.5, 'M4', 2.5, 0],
+]
+
+function greenLayers(c: Palette): LayerSpecification[] {
+  return [
     {
       id: 'cph-green',
       type: 'fill',
-      source: SRC,
+      source: TILES,
       'source-layer': 'landcover',
       filter: ['match', ['get', 'class'], ['grass', 'wood'], true, false],
       paint: { 'fill-color': ['match', ['get', 'class'], 'wood', c.wood, c.park], 'fill-opacity': 0.9 },
     },
-    {
-      id: 'cph-parks',
-      type: 'fill',
-      source: SRC,
-      'source-layer': 'park',
-      paint: { 'fill-color': c.park, 'fill-opacity': 0.6 },
-    },
+    { id: 'cph-parks', type: 'fill', source: TILES, 'source-layer': 'park', paint: { 'fill-color': c.park, 'fill-opacity': 0.6 } },
     {
       id: 'cph-cemetery',
       type: 'fill',
-      source: SRC,
+      source: TILES,
       'source-layer': 'landuse',
       filter: ['==', ['get', 'class'], 'cemetery'],
       paint: { 'fill-color': c.cemetery, 'fill-opacity': 0.9 },
     },
   ]
-  return greens
-    .concat([
-      // --- Landmark buildings: invisible hit layer for lookups + highlighted outline.
-      {
-        id: HIT_LAYER,
-        type: 'fill',
-        source: SRC,
-        'source-layer': 'building',
-        minzoom: 14,
-        paint: { 'fill-color': '#000', 'fill-opacity': 0 },
+}
+
+function overlayLayers(c: Palette): LayerSpecification[] {
+  return [
+    {
+      id: 'cph-landmark-fill',
+      type: 'fill',
+      source: 'cph-landmarks',
+      minzoom: 12.5,
+      paint: { 'fill-color': c.landmarkFill, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12.5, 0.12, 16, 0.22] },
+    },
+    {
+      id: 'cph-landmark-outline',
+      type: 'line',
+      source: 'cph-landmarks',
+      minzoom: 12.5,
+      paint: { 'line-color': c.landmarkLine, 'line-width': ['interpolate', ['linear'], ['zoom'], 12.5, 1, 17, 2.5] },
+    },
+    {
+      id: 'cph-regional',
+      type: 'line',
+      source: 'cph-transit',
+      filter: ['all', isLine, mode('regional')],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': c.regional, 'line-width': byZoom(1.2, 2.5), 'line-dasharray': [3, 2] },
+    },
+    {
+      id: 'cph-stog',
+      type: 'line',
+      source: 'cph-transit',
+      filter: ['all', isLine, mode('stog')],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': c.stog, 'line-width': byZoom(1.6, 3.5) },
+    },
+    {
+      id: 'cph-metro-casing',
+      type: 'line',
+      source: 'cph-transit',
+      filter: ['all', isLine, mode('metro')],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': c.casing, 'line-width': byZoom(3.2, 6), 'line-offset': metroOffset },
+    },
+    {
+      id: 'cph-metro',
+      type: 'line',
+      source: 'cph-transit',
+      filter: ['all', isLine, mode('metro')],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': ['get', 'colour'], 'line-width': byZoom(1.8, 3.8), 'line-offset': metroOffset },
+    },
+    {
+      id: 'cph-stations',
+      type: 'circle',
+      source: 'cph-transit',
+      minzoom: 11.5,
+      filter: ['all', isPoint, ['!=', ['get', 'mode'], 'regional']],
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 11.5, 2.2, 16, 5.5],
+        'circle-color': c.stationFill,
+        'circle-stroke-color': ['match', ['get', 'mode'], 'metro', c.label, c.stog],
+        'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11.5, 1.2, 16, 2.2],
       },
-      {
-        id: 'cph-landmark-fill',
-        type: 'fill',
-        source: SRC,
-        'source-layer': 'building',
-        minzoom: 14,
-        filter: NO_LANDMARKS,
-        paint: { 'fill-color': c.landmark, 'fill-opacity': 0.22 },
+    },
+    {
+      id: 'cph-station-labels',
+      type: 'symbol',
+      source: 'cph-transit',
+      minzoom: 13.5,
+      filter: ['all', isPoint, ['!=', ['get', 'mode'], 'regional']],
+      layout: {
+        'text-field': ['concat', ['match', ['get', 'mode'], 'metro', 'Ⓜ ', 'Ⓢ '], ['get', 'name']],
+        'text-font': ['Noto Sans Regular'],
+        'text-size': 11,
+        'text-offset': [0, 0.9],
+        'text-anchor': 'top',
+        'text-max-width': 8,
+        'text-optional': true,
       },
-      {
-        id: 'cph-landmark-outline',
-        type: 'line',
-        source: SRC,
-        'source-layer': 'building',
-        minzoom: 14,
-        filter: NO_LANDMARKS,
-        paint: { 'line-color': c.landmark, 'line-width': 2 },
-      },
-    ] as LayerSpecification[])
-    .concat([
-      // --- Public transport. Tunnels (most of the metro and the central S-train) are dashed.
-      {
-        id: 'cph-rail-tunnel',
-        type: 'line',
-        source: SRC,
-        'source-layer': 'transportation',
-        minzoom: 10,
-        filter: ['all', ['==', ['get', 'class'], 'rail'], isTunnel],
-        paint: { 'line-color': c.rail, 'line-width': width(1, 2.5), 'line-opacity': 0.6, 'line-dasharray': [2, 1.5] },
-      },
-      {
-        id: 'cph-rail',
-        type: 'line',
-        source: SRC,
-        'source-layer': 'transportation',
-        minzoom: 10,
-        filter: ['all', ['==', ['get', 'class'], 'rail'], notTunnel],
-        paint: { 'line-color': c.rail, 'line-width': width(1, 2.5) },
-      },
-      {
-        id: 'cph-metro-tunnel',
-        type: 'line',
-        source: SRC,
-        'source-layer': 'transportation',
-        minzoom: 10,
-        filter: ['all', ['==', ['get', 'class'], 'transit'], isTunnel],
-        paint: { 'line-color': c.metro, 'line-width': width(1.2, 3), 'line-opacity': 0.55, 'line-dasharray': [2, 1.5] },
-      },
-      {
-        id: 'cph-metro',
-        type: 'line',
-        source: SRC,
-        'source-layer': 'transportation',
-        minzoom: 10,
-        filter: ['all', ['==', ['get', 'class'], 'transit'], notTunnel],
-        paint: { 'line-color': c.metro, 'line-width': width(1.2, 3) },
-      },
-      {
-        id: 'cph-stations',
-        type: 'circle',
-        source: SRC,
-        'source-layer': 'poi',
-        minzoom: 12,
-        filter: ['==', ['get', 'class'], 'railway'],
-        paint: {
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 12, 2.5, 16, 5.5],
-          'circle-color': c.stationFill,
-          'circle-stroke-color': ['match', ['get', 'subclass'], 'subway', c.metro, c.rail],
-          'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 12, 1.5, 16, 2.5],
-        },
-      },
-      {
-        id: 'cph-station-labels',
-        type: 'symbol',
-        source: SRC,
-        'source-layer': 'poi',
-        minzoom: 14.5,
-        filter: ['==', ['get', 'class'], 'railway'],
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-font': ['Noto Sans Regular'],
-          'text-size': 11,
-          'text-offset': [0, 0.9],
-          'text-anchor': 'top',
-          'text-max-width': 8,
-        },
-        paint: { 'text-color': c.label, 'text-halo-color': c.halo, 'text-halo-width': 1.4 },
-      },
-    ] as LayerSpecification[])
+      paint: { 'text-color': c.label, 'text-halo-color': c.halo, 'text-halo-width': 1.5 },
+    },
+  ]
 }
 
 /** Applies the adjustments; call after every style load. */
 export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible: boolean): void {
   const style = map.getStyle()
-  // Hide clutter: all POI icons/labels (our own markers carry the important places),
-  // road shields and one-way arrows.
+  const c = dark ? DARK : LIGHT
+  // Hide clutter: POI icons/labels (our markers carry the important places), road shields,
+  // one-way arrows, and the tiles' own rail lines (replaced by the transit overlay).
   for (const l of style.layers) {
     const sl = 'source-layer' in l ? l['source-layer'] : undefined
-    if (l.type === 'symbol' && (sl === 'poi' || /shield|one_way|oneway/.test(l.id))) {
+    const filter = JSON.stringify('filter' in l ? l.filter : '')
+    const isTileRail = sl === 'transportation' && l.type === 'line' && /"(rail|transit)"/.test(filter)
+    if ((l.type === 'symbol' && (sl === 'poi' || /shield|one_way|oneway/.test(l.id))) || isTileRail) {
       map.setLayoutProperty(l.id, 'visibility', 'none')
     }
   }
-  // Landmarks and transport go above the (3D) buildings but below the labels that follow them.
+
+  if (!map.getSource('cph-transit')) map.addSource('cph-transit', { type: 'geojson', data: transit as FeatureCollection })
+  if (!map.getSource('cph-landmarks')) map.addSource('cph-landmarks', { type: 'geojson', data: landmarks as FeatureCollection })
+
+  // Greens just under the roads; landmarks and transport above the (3D) buildings but under
+  // the labels that follow them.
+  const firstRoad = style.layers.find((l) => 'source-layer' in l && l['source-layer'] === 'transportation' && l.type === 'line')?.id
   let lastBuilding = -1
   style.layers.forEach((l, i) => {
     if ('source-layer' in l && l['source-layer'] === 'building') lastBuilding = i
   })
-  const firstSymbol = style.layers.slice(lastBuilding + 1).find((l) => l.type === 'symbol')?.id
-  // Greens go just above the base landuse so roads stay on top of them.
-  const firstRoad = style.layers.find(
-    (l) => 'source-layer' in l && l['source-layer'] === 'transportation' && l.type === 'line',
-  )?.id
-  for (const l of layers(dark ? DARK : LIGHT)) {
-    if (map.getLayer(l.id)) continue
-    const isGreen = l.id === 'cph-green' || l.id === 'cph-parks' || l.id === 'cph-cemetery'
-    map.addLayer(l, isGreen ? firstRoad : l.id === 'cph-station-labels' ? undefined : firstSymbol)
+  const labelsAfterBuildings = style.layers.slice(lastBuilding + 1).find((l) => l.type === 'symbol')?.id
+
+  for (const l of greenLayers(c)) if (!map.getLayer(l.id)) map.addLayer(l, firstRoad)
+  for (const l of overlayLayers(c)) {
+    if (!map.getLayer(l.id)) map.addLayer(l, l.id === 'cph-station-labels' ? undefined : labelsAfterBuildings)
   }
   setTransitVisible(map, transitVisible)
 }
 
 export function setTransitVisible(map: maplibregl.Map, on: boolean): void {
   for (const id of TRANSIT_LAYERS) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none')
-}
-
-const marked = new WeakMap<maplibregl.Map, Set<number>>()
-
-/**
- * Outlines the building under each landmark place (sights, museums…): the building ids found
- * under the place markers become the filter of the landmark layers. Call when the map is idle.
- */
-export function highlightLandmarks(map: maplibregl.Map): void {
-  if (map.getZoom() < 14 || !map.getLayer(HIT_LAYER)) return
-  const ids = marked.get(map) ?? new Set<number>()
-  marked.set(map, ids)
-  const before = ids.size
-  const bounds = map.getBounds()
-  for (const p of places) {
-    if (!LANDMARK_KINDS.includes(p.kind) || !bounds.contains([p.coords.lng, p.coords.lat])) continue
-    const pt = map.project([p.coords.lng, p.coords.lat])
-    const hits = map.queryRenderedFeatures(
-      [
-        [pt.x - 3, pt.y - 3],
-        [pt.x + 3, pt.y + 3],
-      ],
-      { layers: [HIT_LAYER] },
-    )
-    for (const f of hits) if (typeof f.id === 'number') ids.add(f.id)
-  }
-  if (ids.size === before) return
-  const filter: ExpressionSpecification = ['in', ['id'], ['literal', [...ids]]]
-  for (const id of LANDMARK_LAYERS) map.setFilter(id, filter)
 }

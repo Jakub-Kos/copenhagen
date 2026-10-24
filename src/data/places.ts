@@ -226,7 +226,7 @@ export const places: Place[] = [
       cs: 'Malé místnosti a hodně schodů. Vstupenky na konkrétní čas je lepší koupit online.',
       en: 'Small rooms and many stairs. Timed tickets are best bought online.',
     },
-    links: [{ label: 'kongernessamling.dk', url: 'https://www.kongernessamling.dk/en/rosenborg/' }],
+    links: [{ label: 'denkongeligesamling.dk', url: 'https://denkongeligesamling.dk/en/rosenborg/' }],
   },
   {
     id: 'botanical-garden',
@@ -620,7 +620,7 @@ export const places: Place[] = [
       cs: 'Náměstí je volně přístupné; muzeum v paláci Christiana VIII. má vlastní hodiny a vstupné.',
       en: 'The square is open to all; the museum in Christian VIII’s palace has its own hours and tickets.',
     },
-    links: [{ label: 'kongernessamling.dk', url: 'https://www.kongernessamling.dk/en/amalienborg/' }],
+    links: [{ label: 'denkongeligesamling.dk', url: 'https://denkongeligesamling.dk/en/amalienborg-museum/' }],
   },
   {
     id: 'marble-church',

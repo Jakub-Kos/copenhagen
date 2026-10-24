@@ -133,6 +133,8 @@ export const cs: Dict = {
   mustSee: 'Nevynechat',
   myRating: 'Moje hodnocení',
   duration: 'Návštěva',
+  weatherLabel: 'Počasí',
+  bestTime: 'Nejlépe',
   hours: 'Otevírací doba',
   hoursOn: 'V {day}',
   alwaysOpen: 'Stále otevřeno (veřejné místo)',
@@ -262,5 +264,9 @@ export const cs: Dict = {
   tripDays: '{n} dní, {stops} zastávek',
 
   whereAmI: 'Kde jsem',
+  legendIndoor: 'uvnitř',
+  legendCovered: 'částečně kryté',
+  legendOutdoor: 'venku',
+  legendMust: 'nevynechat',
   locationError: 'Polohu se nepodařilo zjistit.',
 }

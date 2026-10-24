@@ -28,6 +28,7 @@ import { KIND_ICON } from './kindStyle'
 import { LegRow } from './LegRow'
 import { Directions } from './Directions'
 import { MapView } from './MapView'
+import { Thumb } from './Thumb'
 import { Button, Field } from './ui'
 import { cx, inputCls } from './cls'
 import { formatDkk } from './money'
@@ -195,10 +196,15 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                 >
                   <div className="flex items-start gap-3">
                     <GripVertical size={20} className="mt-1.5 hidden shrink-0 cursor-grab text-slate-400 md:block" aria-hidden />
-                    <span className="grid size-8 shrink-0 place-items-center rounded-full bg-navy font-bold text-white">{i + 1}</span>
+                    <div className="relative shrink-0">
+                      <Thumb placeId={s.place.id} className="size-14" />
+                      <span className="absolute -top-1.5 -left-1.5 grid size-6 place-items-center rounded-full bg-navy text-xs font-bold text-white ring-2 ring-white dark:ring-slate-800">
+                        {i + 1}
+                      </span>
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold">
-                        {KIND_ICON[s.place.kind]} {bi(s.place.name)}
+                        {bi(s.place.name)}
                       </div>
                       <div className="text-sm text-slate-600 dark:text-slate-300">
                         {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}

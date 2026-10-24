@@ -6,7 +6,7 @@ import type { LatLng, Place } from '@/data/types'
 import type { HomeBase } from '@/state/tripTypes'
 import { load, save } from '@/state/storage'
 import { KIND_ICON, WEATHER_COLOR } from './kindStyle'
-import { enhanceStyle, highlightLandmarks, setTransitVisible } from './mapStyle'
+import { enhanceStyle, setTransitVisible } from './mapStyle'
 
 // OpenFreeMap: free, no key, no request limits; the style carries the OSM/OpenMapTiles attribution.
 const STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/liberty'
@@ -33,15 +33,17 @@ interface Props {
   fitPoints?: LatLng[]
   fitKey?: string
   onUserLocation?: (p: LatLng) => void
+  /** Below this zoom markers shrink to coloured dots (for the busy full catalogue). */
+  compactBelowZoom?: number
   className?: string
 }
 
 const toLngLat = (p: LatLng): [number, number] => [p.lng, p.lat]
 
 const LINE_PAINT: Record<MapLine['style'], { color: string; width: number; dash?: number[] }> = {
-  walk: { color: '#646cff', width: 3, dash: [2, 1.5] },
-  route: { color: '#646cff', width: 5 },
-  estimate: { color: '#646cff', width: 3, dash: [0.5, 2] },
+  walk: { color: '#4f46e5', width: 3, dash: [2, 1.5] },
+  route: { color: '#4f46e5', width: 5 },
+  estimate: { color: '#4f46e5', width: 3, dash: [0.5, 2] },
   transit: { color: '#64748b', width: 3, dash: [1, 2] },
 }
 
@@ -56,6 +58,7 @@ export function MapView({
   fitPoints,
   fitKey,
   onUserLocation,
+  compactBelowZoom,
   className,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
@@ -94,9 +97,22 @@ export function MapView({
     m.addControl(geo, 'top-right')
     m.addControl(new TransitToggle(), 'top-right')
     m.on('style.load', () => enhanceStyle(m, dark, transitOn()))
-    m.on('idle', () => highlightLandmarks(m))
+    if (compactBelowZoom) {
+      const compact = () => m.getContainer().classList.toggle('pins-small', m.getZoom() < compactBelowZoom)
+      m.on('zoom', compact)
+      compact()
+    }
     m.on('load', () => {
       m.addSource('lines', { type: 'geojson', data: linesGeoJson(linesRef.current ?? []) })
+      // White casing under real routes keeps them readable over the coloured transit lines.
+      m.addLayer({
+        id: 'lines-casing',
+        type: 'line',
+        source: 'lines',
+        filter: ['==', ['get', 'style'], 'route'],
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 },
+      })
       for (const [style, p] of Object.entries(LINE_PAINT)) {
         m.addLayer({
           id: `lines-${style}`,
@@ -115,6 +131,7 @@ export function MapView({
       m.remove()
       map.current = null
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is created once; compactBelowZoom is fixed per map
   }, [])
 
   // Markers.

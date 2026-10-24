@@ -8,6 +8,7 @@ import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
 import { WeatherStrip } from '@/components/WeatherStrip'
+import { imageFor, thumb } from '@/components/placeImage'
 import { useT } from '@/i18n/useT'
 import { googleMapsDirections } from '@/logic/geo'
 import { entryPoint } from '@/logic/timeline'
@@ -116,56 +117,57 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                   {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} />}
                   <div
                     className={cx(
-                      'rounded-xl border p-4',
+                      'overflow-hidden rounded-xl border',
                       isNext
                         ? 'border-2 border-accent bg-accent/5 shadow-md'
                         : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800',
                       isDone && 'opacity-55',
                     )}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className={cx('grid size-9 shrink-0 place-items-center rounded-full font-bold text-white', isNext ? 'bg-accent' : 'bg-navy')}>
-                        {i + 1}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        {isNext && <div className="text-sm font-bold tracking-wide text-accent uppercase">{t('nextStop')}</div>}
-                        <div className="text-lg leading-tight font-semibold">
-                          {KIND_ICON[s.place.kind]} {bi(s.place.name)}
+                    {isNext && imageFor(s.place.id) && (
+                      <img src={thumb(imageFor(s.place.id)!, 500)} alt="" className="h-36 w-full object-cover" />
+                    )}
+                    <div className="flex flex-col gap-3 p-4">
+                      <div className="flex items-start gap-3">
+                        <span className={cx('grid size-9 shrink-0 place-items-center rounded-full font-bold text-white', isNext ? 'bg-accent' : 'bg-navy')}>
+                          {i + 1}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          {isNext && <div className="text-sm font-bold tracking-wide text-accent uppercase">{t('nextStop')}</div>}
+                          <div className="text-lg leading-tight font-semibold">
+                            {KIND_ICON[s.place.kind]} {bi(s.place.name)}
+                          </div>
+                          <div className="text-slate-600 dark:text-slate-300">
+                            {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}
+                            {isDone && ` · ✓ ${t('done')}`}
+                          </div>
+                          {!isDone && warned(s.stopId, 'closed') && (
+                            <div className="font-medium text-red-600 dark:text-red-400">⚠️ {t('warn.closed')}</div>
+                          )}
+                          {!isDone && warned(s.stopId, 'dark') && (
+                            <div className="font-medium text-amber-700 dark:text-amber-400">🌙 {t('warn.dark')}</div>
+                          )}
+                          {!isDone && warned(s.stopId, 'rain') && (
+                            <div className="font-medium text-blue-700 dark:text-blue-300">🌧️ {t('warn.rain')}</div>
+                          )}
+                          {!isDone && warned(s.stopId, 'wind') && (
+                            <div className="font-medium text-amber-700 dark:text-amber-400">💨 {t('warn.wind')}</div>
+                          )}
+                          {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
                         </div>
-                        <div className="text-slate-600 dark:text-slate-300">
-                          {fromMinutes(s.arrive)} – {fromMinutes(s.leave)}
-                          {isDone && ` · ✓ ${t('done')}`}
-                        </div>
-                        {!isDone && warned(s.stopId, 'closed') && (
-                          <div className="font-medium text-red-600 dark:text-red-400">⚠️ {t('warn.closed')}</div>
-                        )}
-                        {!isDone && warned(s.stopId, 'dark') && (
-                          <div className="font-medium text-amber-700 dark:text-amber-400">🌙 {t('warn.dark')}</div>
-                        )}
-                        {!isDone && warned(s.stopId, 'rain') && (
-                          <div className="font-medium text-blue-700 dark:text-blue-300">🌧️ {t('warn.rain')}</div>
-                        )}
-                        {!isDone && warned(s.stopId, 'wind') && (
-                          <div className="font-medium text-amber-700 dark:text-amber-400">💨 {t('warn.wind')}</div>
-                        )}
-                        {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
                       </div>
+                      {isNext && (
+                        <a
+                          href={googleMapsDirections(s.place.waypoints?.[0] ?? s.place.coords, undefined, s.leg?.mode === 'transit' ? 'transit' : 'walking')}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent text-lg font-semibold text-white no-underline"
+                        >
+                          <Navigation size={20} /> {t('navigate')}
+                        </a>
+                      )}
+                      {isNext && <LiveRoute targets={liveTargets} speedKmh={trip.walkingSpeedKmh} onLine={setLiveLine} />}
                     </div>
-                    {isNext && (
-                      <a
-                        href={googleMapsDirections(s.place.waypoints?.[0] ?? s.place.coords, undefined, s.leg?.mode === 'transit' ? 'transit' : 'walking')}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-lg bg-accent text-lg font-semibold text-white no-underline"
-                      >
-                        <Navigation size={20} /> {t('navigate')}
-                      </a>
-                    )}
-                    {isNext && (
-                      <div className="mt-3">
-                        <LiveRoute targets={liveTargets} speedKmh={trip.walkingSpeedKmh} onLine={setLiveLine} />
-                      </div>
-                    )}
                   </div>
                 </li>
               )

@@ -5,9 +5,12 @@ import { placeById, places } from '@/data/places'
 import type { LatLng } from '@/data/types'
 import { pricingFor } from '@/data/prices'
 import { FilterPanel } from '@/components/FilterPanel'
-import { KIND_ICON, WEATHER_ICON } from '@/components/kindStyle'
+import { WEATHER_ICON } from '@/components/kindStyle'
 import { MapView, type MapLine } from '@/components/MapView'
 import { PlaceDetail } from '@/components/PlaceDetail'
+import { PlaceSheet } from '@/components/PlaceSheet'
+import { MapLegend } from '@/components/MapLegend'
+import { Thumb } from '@/components/Thumb'
 import { RouteBuilder } from '@/components/RouteBuilder'
 import { WeatherHint } from '@/components/WeatherHint'
 import { useRoutedTimeline } from '@/components/useTimeline'
@@ -112,7 +115,7 @@ export default function Guide() {
   const nActive = activeFilterCount(filters)
 
   return (
-    <div className="md:grid md:h-[calc(100dvh-7.5rem)] md:grid-cols-[minmax(340px,420px)_1fr]">
+    <div className="md:grid md:h-[calc(100dvh-7.5rem)] md:grid-cols-[420px_1fr]">
       <div className="h-[42dvh] md:order-2 md:h-full">
         <MapView
           className="h-full w-full"
@@ -126,10 +129,12 @@ export default function Guide() {
           fitPoints={routeIds.length >= 2 ? routePoints : cityPoints}
           fitKey={routeIds.length >= 2 ? `route:${routeIds.join(',')}` : 'city'}
           onUserLocation={setUserLoc}
+          compactBelowZoom={13.5}
         />
       </div>
 
       <div className="flex flex-col gap-3 p-4 md:overflow-y-auto">
+        <MapLegend />
         <div className="flex gap-2">
           <input
             className={inputCls}
@@ -188,9 +193,7 @@ export default function Guide() {
                     : 'border-slate-200 bg-white hover:border-accent dark:border-slate-700 dark:bg-slate-800',
                 )}
               >
-                <span className="text-2xl" aria-hidden>
-                  {KIND_ICON[p.kind]}
-                </span>
+                <Thumb placeId={p.id} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-2 font-semibold">
                     <span className="truncate">{bi(p.name)}</span>
@@ -213,14 +216,14 @@ export default function Guide() {
       </div>
 
       {selected && !routeMode && (
-        <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 max-h-[65dvh] overflow-y-auto rounded-t-2xl border-t border-slate-200 bg-white p-4 shadow-2xl md:right-auto md:bottom-4 md:left-4 md:w-[400px] md:rounded-2xl md:border dark:border-slate-700 dark:bg-slate-800">
+        <PlaceSheet onClose={() => select(null)}>
           <PlaceDetail
             place={selected}
             refDate={refDate}
             distanceLabel={formatKm(haversineM(origin, selected.coords))}
             onClose={() => select(null)}
           />
-        </div>
+        </PlaceSheet>
       )}
     </div>
   )

@@ -43,9 +43,9 @@ export function GroupEditor({ trip }: { trip: Trip }) {
       <ul className="flex flex-col gap-2">
         {trip.group.map((x) => (
           <li key={x.id} className="grid grid-cols-[1fr_auto] gap-2 rounded-lg bg-slate-50 p-2 dark:bg-slate-900">
-            <div className="grid grid-cols-[1fr_1fr_5rem] gap-2">
+            <div className="grid grid-cols-[1fr_5rem] gap-2">
               <input
-                className={inputCls}
+                className={`${inputCls} col-span-2`}
                 aria-label={t('travellerName')}
                 placeholder={t('travellerName')}
                 value={x.name}

@@ -5,8 +5,9 @@
   --font-sans: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   --color-navy: #0b1220;
   --color-navy-text: #e5f0ff;
-  --color-accent: #646cff;
-  --color-accent-strong: #535bf2;
+  /* Calmer than WebPage's #646cff link colour, same family. */
+  --color-accent: #4f46e5;
+  --color-accent-strong: #4338ca;
   --color-mustsee: #f5b301;
   --color-indoor: #2563eb;
   --color-covered: #d97706;
@@ -31,8 +32,10 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
+      --color-accent: #6366f1;
+      --color-accent-strong: #818cf8;
       color: rgba(255, 255, 255, 0.9);
-      background-color: #242424;
+      background-color: #1b1f27;
     }
   }
 
@@ -99,4 +102,28 @@
 
 .maplibregl-ctrl-attrib {
   font-size: 11px;
+}
+
+/* Busy overview: markers become small coloured dots until zoomed in. */
+.pins-small .pin {
+  width: 14px;
+  height: 14px;
+  font-size: 0;
+  border-width: 0;
+  background: var(--pin-color);
+  box-shadow: 0 0 0 2px #fff, 0 1px 3px rgb(0 0 0 / 0.35);
+}
+.pins-small .pin.must {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--color-mustsee), 0 1px 3px rgb(0 0 0 / 0.35);
+}
+.pins-small .pin .badge {
+  display: none;
+}
+.pins-small .pin.selected {
+  width: 30px;
+  height: 30px;
+  font-size: 16px;
+  background: #fff;
+  border: 3px solid var(--pin-color);
+  transform: none;
 }

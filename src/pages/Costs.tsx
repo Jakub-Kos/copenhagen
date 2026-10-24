@@ -101,7 +101,7 @@ function TripCostsView({ trip }: { trip: Trip }) {
                       </div>
                     </div>
                     <div className="text-right font-semibold whitespace-nowrap">
-                      {dkk(sum.dkk)}
+                      {sum.unknown > 0 && sum.dkk === 0 ? '?' : dkk(sum.dkk)}
                       {sum.unknown > 0 && <div className="text-xs font-normal text-slate-500">{t('someUnknown', { n: sum.unknown })}</div>}
                     </div>
                   </li>

@@ -148,3 +148,12 @@ export interface FreePricing {
 }
 
 export type Pricing = PaidPricing | FreePricing
+
+export interface PlaceImage {
+  /** 960 px thumbnail on upload.wikimedia.org. */
+  url: string
+  /** Commons file page (credit link). */
+  page: string
+  author: string
+  license: string
+}

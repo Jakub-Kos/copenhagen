@@ -138,6 +138,8 @@ export const en = {
   mustSee: 'Must-see',
   myRating: 'My rating',
   duration: 'Visit',
+  weatherLabel: 'Weather',
+  bestTime: 'Best time',
   hours: 'Opening hours',
   hoursOn: 'On {day}',
   alwaysOpen: 'Always open (public space)',
@@ -272,6 +274,10 @@ export const en = {
   tripDays: '{n} days, {stops} stops',
 
   whereAmI: 'Where am I',
+  legendIndoor: 'indoors',
+  legendCovered: 'partly covered',
+  legendOutdoor: 'outdoors',
+  legendMust: 'must-see',
   locationError: 'Could not get your location.',
 }
 
