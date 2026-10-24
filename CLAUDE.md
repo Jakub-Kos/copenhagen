@@ -47,6 +47,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `state/forecastStore.ts` + `useForecast()` cache it in `cph:forecast` and refetch when it's over an hour old, including when the tab becomes visible again.
   - `logic/weatherFit.ts` (pure): `conditionsOf(hoursIn(...))` → `weatherFit(place)` (score, wet/showery/windy) and `hintFor` ("good" / "better on <day>").
   - Wiring: `useTimeline` passes `weatherFor` so `buildTimeline` emits `rain`/`wind` warnings, and `DayPlanner` passes the fit score as `suggestDay`'s `extraScore`.
+  - Swaps: `logic/weatherSwap.ts` `swapsFor` finds unplanned places near a rainy/windy stop that are open in the same slot. A place qualifies when its fit is ≥ 0 and at least 3 better than the stop's. `WeatherSwap` (Plan and Today, under stops with `rain`/`wind` warnings) offers "Swap" (`updateStop` placeId) and "Move to <day>" (`moveStopToDay`, from `hintFor`).
 - **Costs** (phase 5):
   - Data:
     - `data/prices.ts` holds entry prices. Food places (kind `food-market`: food halls, cafés, bakeries, smørrebrød) are `NO_TICKET_IDS`, i.e. free with `noTicket: true` ("you pay for what you eat"); never put menu prices in. `paid()` defaults: students/seniors fall back to the adult price, under 18 free unless stated.

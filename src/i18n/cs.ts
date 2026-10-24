@@ -307,4 +307,9 @@ export const cs: Dict = {
   legendToilet: 'veřejné WC',
   legendBench: 'lavička',
   nearestToilet: 'WC poblíž: {d}',
+
+  // Rain / wind swaps
+  swapInstead: 'Místo toho poblíž:',
+  swapDo: 'Vyměnit',
+  moveToDay: 'Přesunout na {day}',
 }

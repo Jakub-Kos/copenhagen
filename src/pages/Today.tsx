@@ -11,6 +11,7 @@ import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
 import { WeatherStrip } from '@/components/WeatherStrip'
+import { WeatherSwap } from '@/components/WeatherSwap'
 import { imageFor, thumb } from '@/components/placeImage'
 import { useT } from '@/i18n/useT'
 import { googleMapsDirections } from '@/logic/geo'
@@ -160,6 +161,9 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                           {isNext && <p className="mt-1 text-sm">{bi(s.place.description)}</p>}
                         </div>
                       </div>
+                      {!isDone && (warned(s.stopId, 'rain') || warned(s.stopId, 'wind')) && (
+                        <WeatherSwap trip={trip} date={date} stop={s} />
+                      )}
                       {isNext && (
                         <a
                           href={googleMapsDirections(s.place.waypoints?.[0] ?? s.place.coords, undefined, s.leg?.mode === 'transit' ? 'transit' : 'walking')}

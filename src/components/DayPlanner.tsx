@@ -14,7 +14,6 @@ import {
   addStop,
   dayOf,
   insertStop,
-  tripDates,
   moveStop,
   moveStopTo,
   plannedPlaces,
@@ -36,7 +35,7 @@ import { cx, inputCls } from './cls'
 import { formatDkk } from './money'
 import { useForecast } from './useForecast'
 import { useTimeline } from './useTimeline'
-import { WeatherHint } from './WeatherHint'
+import { WeatherSwap } from './WeatherSwap'
 import { WeatherStrip } from './WeatherStrip'
 
 type StopWarning = 'closed' | 'dark' | 'rain' | 'wind'
@@ -55,7 +54,6 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const day = dayOf(trip, date)
   const { tl, legRoute, walkRoute, lines } = useTimeline(trip, date)
   const { forecast } = useForecast()
-  const dates = tripDates(trip)
   const [optimising, setOptimising] = useState(false)
   const [notice, setNotice] = useState<'optimiseFailed' | 'nothingFits' | null>(null)
   /** The trip before the last automatic change (suggest/optimise), for one-step undo. */
@@ -216,15 +214,13 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                           {WARN_STYLE[w].icon} {t(`warn.${w}`)}
                         </div>
                       ))}
-                      {(warns.includes('rain') || warns.includes('wind')) && (
-                        <WeatherHint place={s.place} date={date} dates={dates} />
-                      )}
                       {s.place.waypoints && (() => {
                         const r = walkRoute(s.place)
                         return r?.status === 'ok' ? <div className="mt-1 text-sm"><Directions route={r.route} /></div> : null
                       })()}
                     </div>
                   </div>
+                  {(warns.includes('rain') || warns.includes('wind')) && <WeatherSwap trip={trip} date={date} stop={s} />}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <label className="flex items-center gap-1 text-sm" title={t('visitMin')}>
                       ⏱

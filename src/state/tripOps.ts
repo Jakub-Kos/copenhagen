@@ -29,6 +29,13 @@ export function insertStop(t: Trip, d: IsoDate, index: number, placeId: string, 
 export const removeStop = (t: Trip, d: IsoDate, stopId: string): Trip =>
   withStops(t, d, (s) => s.filter((x) => x.id !== stopId))
 
+/** Moves a stop to the end of another day (keeping its visit time); call `resuggestLegModes` on both days. */
+export function moveStopToDay(t: Trip, from: IsoDate, stopId: string, to: IsoDate): Trip {
+  const stop = dayOf(t, from).stops.find((x) => x.id === stopId)
+  if (!stop || from === to) return t
+  return withStops(removeStop(t, from, stopId), to, (s) => [...s, stop])
+}
+
 export function moveStop(t: Trip, d: IsoDate, stopId: string, delta: -1 | 1): Trip {
   return withStops(t, d, (s) => {
     const i = s.findIndex((x) => x.id === stopId)

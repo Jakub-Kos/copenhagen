@@ -317,6 +317,11 @@ export const en = {
   legendToilet: 'public toilet',
   legendBench: 'bench',
   nearestToilet: 'Toilet nearby: {d}',
+
+  // Rain / wind swaps
+  swapInstead: 'Instead, nearby:',
+  swapDo: 'Swap',
+  moveToDay: 'Move to {day}',
 }
 
 export type Dict = typeof en
