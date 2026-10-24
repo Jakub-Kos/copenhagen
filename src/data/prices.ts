@@ -59,6 +59,17 @@ const FREE_IDS = [
   'grundtvig-church',
   'walk-lakes',
   'dragor',
+  'graabroedretorv',
+  'bibliotekshaven',
+  'opera-house', // the outside and the quay; performances and tours are separate
+  'islands-brygge',
+  'walk-old-town',
+  'walk-slotsholmen',
+  'walk-langelinie',
+  'walk-islands-brygge',
+  'walk-vesterbro',
+  'walk-frederiksberg',
+  'walk-helsingor',
 ]
 
 /** Food halls, cafés and restaurants: no entry fee, only what you buy. */
@@ -197,6 +208,23 @@ const PAID: Record<string, Paid> = {
     source: 'https://www.roskildedomkirke.dk/besoeg',
     checkedOn: C2,
   }),
+  // Added 2026-10-24: in the Copenhagen Card (copenhagencard.com/attractions); door prices
+  // are not published as plain text on these sites, so they stay unknown.
+  'museum-of-copenhagen': paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://cphmuseum.kk.dk/en/visit-us', checkedOn: C2 }),
+  'workers-museum': paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://www.arbejdermuseet.dk/', checkedOn: C2 }),
+  planetarium: paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://www.planetariet.dk/', checkedOn: C2 }),
+  charlottenborg: paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://kunsthalcharlottenborg.dk/en/visit/', checkedOn: C2 }),
+  'war-museum': paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://natmus.dk/', checkedOn: C2 }),
+  zoo: paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://www.zoo.dk/billetter', checkedOn: C2 }),
+  'maritime-museum': paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://mfs.dk/en/', checkedOn: C2 }),
+  arken: paid({
+    adult: null,
+    includedInCopenhagenCard: true,
+    note: { cs: 'Do 18 let zdarma (nutná vstupenka).', en: 'Under 18 free (ticket needed).' },
+    source: 'https://shop.arken.dk/entrebilleter',
+    checkedOn: C2,
+  }),
+  ordrupgaard: paid({ adult: null, freeUnderAge: null, includedInCopenhagenCard: true, source: 'https://ordrupgaard.dk/en/', checkedOn: C2 }),
   'blue-planet': paid({
     adult: null,
     freeUnderAge: 3,

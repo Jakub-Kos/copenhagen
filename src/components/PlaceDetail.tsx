@@ -8,6 +8,10 @@ import { hoursOn } from '@/logic/hours'
 import { type IsoDate, addDays, formatDayShort, formatDuration } from '@/logic/time'
 import { suggestLegMode } from '@/logic/timeline'
 import { placeById } from '@/data/places'
+import addresses from '@/data/addresses.json'
+import { highlights } from '@/data/details'
+import { walkMetres } from '@/data/walks'
+import { nearestStations } from '@/logic/stations'
 import { useActiveTrip, useStore } from '@/state/store'
 import { addStop, dayOf, plannedPlaces, tripDates } from '@/state/tripOps'
 import { KIND_ICON, WEATHER_ICON } from './kindStyle'
@@ -46,6 +50,10 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
   }
 
   const img = imageFor(p.id)
+  const start = p.waypoints?.[0] ?? p.coords
+  const address = (addresses as Record<string, string>)[p.id]
+  const stations = nearestStations(start)
+  const walkM = walkMetres(p.id)
   const closeButton = (
     <button
       type="button"
@@ -90,6 +98,15 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
         </header>
 
         <p className="leading-relaxed">{bi(p.description)}</p>
+        {highlights[p.id] && (
+          <Section title={t('whatToSee')}>
+            <ul className="flex list-disc flex-col gap-1 pl-5">
+              {highlights[p.id].map((x) => (
+                <li key={x.en}>{bi(x)}</li>
+              ))}
+            </ul>
+          </Section>
+        )}
         {p.notes && (
           <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950 dark:bg-amber-900/25 dark:text-amber-100">💡 {bi(p.notes)}</p>
         )}
@@ -106,6 +123,24 @@ export function PlaceDetail({ place: p, refDate, distanceLabel, onClose }: Props
           <Fact label={t('effort')}>{t(`effort.${p.effort}`)}</Fact>
           <Fact label={t('bestTime')}>{p.bestTime.map((b) => t(`best.${b}`)).join(', ')}</Fact>
         </dl>
+
+        <Section title={t('gettingThere')}>
+          <ul className="flex flex-col gap-1 text-sm">
+            {address && (
+              <li>
+                📍 {p.waypoints ? `${t('walkStart')}: ` : ''}
+                {address}
+              </li>
+            )}
+            {p.waypoints && walkM && <li>🚶 {t('walkLength', { km: (walkM / 1000).toFixed(1) })}</li>}
+            {stations.map((s) => (
+              <li key={`${s.mode}:${s.name}`}>
+                {s.mode === 'metro' ? 'Ⓜ' : s.mode === 'stog' ? 'Ⓢ' : '🚆'} {s.name}
+                {s.lines && <span className="text-slate-500 dark:text-slate-400"> ({s.lines})</span>} · {s.metres < 1000 ? `${Math.round(s.metres / 10) * 10} m` : `${(s.metres / 1000).toFixed(1)} km`}
+              </li>
+            ))}
+          </ul>
+        </Section>
 
         <Section title={t('price')}>
           <PriceInfo pricing={pricing} />

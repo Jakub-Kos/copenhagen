@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { placeById } from '@/data/places'
+import { walkShape } from '@/data/walks'
 import type { Place } from '@/data/types'
 import { useT } from '@/i18n/useT'
 import { type Leg, type Timeline, type TimelineOptions, buildTimeline, legKey, routeSpecs, walkKey } from '@/logic/timeline'
@@ -51,8 +52,8 @@ export function useRoutedTimeline(day: DayPlan, o: Omit<TimelineOptions, 'routes
         const e = walkRoute(s.place)
         lines.push({
           id: `${s.stopId}-walk`,
-          coords: e?.status === 'ok' ? e.route.shape : s.place.waypoints,
-          style: e?.status === 'ok' ? 'route' : 'estimate',
+          coords: e?.status === 'ok' ? e.route.shape : (walkShape(s.place.id) ?? s.place.waypoints),
+          style: e?.status === 'ok' || walkShape(s.place.id) ? 'route' : 'estimate',
         })
       }
     }

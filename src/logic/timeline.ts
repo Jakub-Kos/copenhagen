@@ -1,6 +1,7 @@
 // Day timeline: start time + legs + visits → arrival/leave times and warnings. Pure.
 
 import type { LatLng, Place } from '@/data/types'
+import { walkMetres } from '@/data/walks'
 import type { DayPlan, LegMode } from '@/state/tripTypes'
 import { CITY_CENTRE, estimateWalkM, pathM, walkMinutes } from './geo'
 import { sunTimes } from './sun'
@@ -55,10 +56,10 @@ export const exitPoint = (p: Place): LatLng => p.waypoints?.[p.waypoints.length 
 /** Key for the routed path of a street walk in `TimelineOptions.routes`. */
 export const walkKey = (placeId: string): string => `walk:${placeId}`
 
-/** Walking distance inside a street walk: routed if known, else the waypoint path plus a bit. */
+/** Walking distance inside a street walk: live route, else the pre-routed length, else the waypoint path plus a bit. */
 export function innerWalkM(p: Place, routes?: TimelineOptions['routes']): number {
   if (!p.waypoints) return 0
-  return routes?.get(walkKey(p.id))?.metres ?? pathM(p.waypoints) * 1.15
+  return routes?.get(walkKey(p.id))?.metres ?? walkMetres(p.id) ?? pathM(p.waypoints) * 1.15
 }
 
 /** Rough door-to-door time for a public-transport leg: waiting + walking to stops + riding. */

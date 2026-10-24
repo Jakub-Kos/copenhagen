@@ -374,6 +374,13 @@ export const en = {
   shareCopied: 'Copied – paste it into a message.',
   shareSms: 'Send as SMS',
   sharePrivacy: 'The position is read once and goes only into the message you send. The app stores and sends nothing.',
+  mapWalks: 'Walks',
+
+  // Place detail extras
+  whatToSee: 'What to see',
+  gettingThere: 'Getting there',
+  walkStart: 'Start',
+  walkLength: '{km} km along the route',
 }
 
 export type Dict = typeof en

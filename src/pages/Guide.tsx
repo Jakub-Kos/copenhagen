@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Route as RouteIcon, SlidersHorizontal } from 'lucide-react'
 import { placeById, places } from '@/data/places'
+import { walkShape } from '@/data/walks'
 import type { LatLng } from '@/data/types'
 import { pricingFor } from '@/data/prices'
 import { FilterPanel } from '@/components/FilterPanel'
@@ -94,9 +95,14 @@ export default function Guide() {
     return m
   }, [trip, routeMode, routeIds])
 
+  // Walks along their routed streets; the selected one is drawn bold and stays visible
+  // even when the 🚶 toggle hides the others.
   const walkLines = useMemo<MapLine[]>(
-    () => list.filter((p) => p.waypoints).map((p) => ({ id: p.id, coords: p.waypoints!, style: 'walk' })),
-    [list],
+    () =>
+      list
+        .filter((p) => p.waypoints)
+        .map((p) => ({ id: p.id, coords: walkShape(p.id) ?? p.waypoints!, style: p.id === selectedId ? 'walk-selected' : 'walk' })),
+    [list, selectedId],
   )
 
   const cityPoints = useMemo(() => places.filter((p) => p.kind !== 'day-trip').map((p) => p.coords), [])
@@ -125,6 +131,7 @@ export default function Guide() {
           badges={badges}
           home={trip?.homeBase}
           lines={routeMode ? routed.lines : walkLines}
+          walkToggle={!routeMode}
           highlight={routeMode && routeIds.length > 0 ? routeIdSet : undefined}
           fitPoints={routeIds.length >= 2 ? routePoints : cityPoints}
           fitKey={routeIds.length >= 2 ? `route:${routeIds.join(',')}` : 'city'}

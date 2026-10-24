@@ -6,7 +6,8 @@ Live site: https://jakub-kos.github.io/copenhagen/
 ## Features
 
 - **Guide**
-  - 60 places, walks and day trips on a map, with photos, opening hours and prices.
+  - 80 places, 13 walks and day trips on a map, with photos, "what to see" highlights, addresses, the nearest metro/S-tog station, opening hours and prices.
+  - Walks follow real streets; a 🚶 map button shows or hides them.
   - Filters: rain-friendly, open on a given day, free, …
   - Includes food & coffee places (bakeries, smørrebrød, food halls).
   - The map shows the metro and S-tog lines, outlines of landmark buildings, public toilets and benches.
@@ -59,7 +60,7 @@ Pushing to `main` runs lint, tests and the build, and deploys to GitHub Pages.
 | Kind | Source |
 |---|---|
 | Map tiles | [OpenFreeMap](https://openfreemap.org/) |
-| Map data (transit lines, landmarks, toilets, benches) | © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors |
+| Map data (transit lines, landmarks, toilets, benches, addresses) | © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, Nominatim |
 | Walking routes | [Valhalla](https://valhalla1.openstreetmap.de) (FOSSGIS) |
 | Weather | [Open-Meteo](https://open-meteo.com/) (CC BY 4.0) |
 | Exchange rates | ECB rates via [Frankfurter](https://frankfurter.dev/) |

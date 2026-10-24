@@ -19,6 +19,13 @@ TITLES = {
  'hirschsprung': 'Hirschsprung Collection', 'kongens-have': 'Rosenborg Castle Gardens', 'dac': 'BLOX',
  'cisternerne': 'Cisternerne', 'blue-planet': 'National Aquarium Denmark', 'grundtvig-church': "Grundtvig's Church",
  'walk-lakes': 'The Lakes, Copenhagen', 'dragor': 'Dragør', 'roskilde-cathedral': 'Roskilde Cathedral',
+ 'museum-of-copenhagen': 'Museum of Copenhagen', 'graabroedretorv': 'Gråbrødretorv', 'charlottenborg': 'Charlottenborg Palace',
+ 'war-museum': 'Royal Danish Arsenal Museum', 'bibliotekshaven': 'Royal Library Garden', 'opera-house': 'Copenhagen Opera House',
+ 'workers-museum': 'Workers Museum', 'planetarium': 'Tycho Brahe Planetarium', 'islands-brygge': 'Islands Brygge',
+ 'zoo': 'Copenhagen Zoo', 'maritime-museum': 'M/S Maritime Museum of Denmark', 'arken': 'Arken Museum of Modern Art',
+ 'ordrupgaard': 'Ordrupgaard', 'walk-old-town': 'Gammeltorv', 'walk-slotsholmen': 'Slotsholmen', 'walk-langelinie': 'Langelinie',
+ 'walk-islands-brygge': 'Bryggebroen', 'walk-vesterbro': 'Istedgade', 'walk-frederiksberg': 'Frederiksberg Palace',
+ 'walk-helsingor': 'Helsingør',
 }
 # Optional second argument: comma-separated ids to fetch (default: all).
 if len(sys.argv) > 2:

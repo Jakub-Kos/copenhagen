@@ -364,4 +364,11 @@ export const cs: Dict = {
   shareCopied: 'Zkopírováno – vložte do zprávy.',
   shareSms: 'Poslat jako SMS',
   sharePrivacy: 'Poloha se zjistí jen jednou a jde jen do zprávy, kterou sami pošlete. Aplikace nic neukládá ani neodesílá.',
+  mapWalks: 'Procházky',
+
+  // Place detail extras
+  whatToSee: 'Co vidět',
+  gettingThere: 'Jak se tam dostat',
+  walkStart: 'Start',
+  walkLength: '{km} km po trase',
 }

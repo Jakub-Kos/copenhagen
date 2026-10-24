@@ -17,8 +17,8 @@ const STYLE_DARK = 'https://tiles.openfreemap.org/styles/dark'
 export interface MapLine {
   id: string
   coords: LatLng[]
-  /** walk = catalogue walk; route = real walking route; estimate = straight line until routed. */
-  style: 'walk' | 'route' | 'estimate' | 'transit'
+  /** walk = catalogue walk (faint, toggleable); walk-selected = the open walk; route = real walking route; estimate = straight line until routed. */
+  style: 'walk' | 'walk-selected' | 'route' | 'estimate' | 'transit'
 }
 
 interface Props {
@@ -37,13 +37,16 @@ interface Props {
   onUserLocation?: (p: LatLng) => void
   /** Below this zoom markers shrink to coloured dots (for the busy full catalogue). */
   compactBelowZoom?: number
+  /** Adds the 🚶 button that shows/hides the faint `walk` lines (the Guide). */
+  walkToggle?: boolean
   className?: string
 }
 
 const toLngLat = (p: LatLng): [number, number] => [p.lng, p.lat]
 
-const LINE_PAINT: Record<MapLine['style'], { color: string; width: number; dash?: number[] }> = {
-  walk: { color: '#4f46e5', width: 3, dash: [2, 1.5] },
+const LINE_PAINT: Record<MapLine['style'], { color: string; width: number; dash?: number[]; opacity?: number }> = {
+  walk: { color: '#4f46e5', width: 3, opacity: 0.45 },
+  'walk-selected': { color: '#4f46e5', width: 5 },
   route: { color: '#4f46e5', width: 5 },
   estimate: { color: '#4f46e5', width: 3, dash: [0.5, 2] },
   transit: { color: '#64748b', width: 3, dash: [1, 2] },
@@ -61,6 +64,7 @@ export function MapView({
   fitKey,
   onUserLocation,
   compactBelowZoom,
+  walkToggle,
   className,
 }: Props) {
   const container = useRef<HTMLDivElement>(null)
@@ -102,6 +106,7 @@ export function MapView({
     m.addControl(geo, 'top-right')
     m.addControl(new LayerToggle('🚇', tRef.current('mapTransit'), 'mapTransit', TRANSIT_LAYERS), 'top-right')
     m.addControl(new LayerToggle('🚻', tRef.current('mapAmenities'), 'mapAmenities', AMENITY_LAYERS), 'top-right')
+    if (walkToggle) m.addControl(new LayerToggle('🚶', tRef.current('mapWalks'), 'mapWalks', WALK_LAYERS), 'top-right')
     m.on('style.load', () => enhanceStyle(m, dark, layerOn('mapTransit'), layerOn('mapAmenities')))
     m.on('click', 'cph-toilets', (e) => {
       const f = e.features?.[0]
@@ -126,7 +131,7 @@ export function MapView({
         id: 'lines-casing',
         type: 'line',
         source: 'lines',
-        filter: ['==', ['get', 'style'], 'route'],
+        filter: ['match', ['get', 'style'], ['route', 'walk-selected'], true, false],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 },
       })
@@ -136,8 +141,17 @@ export function MapView({
           type: 'line',
           source: 'lines',
           filter: ['==', ['get', 'style'], style],
-          layout: { 'line-cap': 'round', 'line-join': 'round' },
-          paint: { 'line-color': p.color, 'line-width': p.width, ...(p.dash ? { 'line-dasharray': p.dash } : {}) },
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
+            visibility: WALK_LAYERS.includes(`lines-${style}`) && walkToggle && !layerOn('mapWalks') ? 'none' : 'visible',
+          },
+          paint: {
+            'line-color': p.color,
+            'line-width': p.width,
+            ...(p.dash ? { 'line-dasharray': p.dash } : {}),
+            ...(p.opacity ? { 'line-opacity': p.opacity } : {}),
+          },
         })
       }
       loaded.current = true
@@ -148,7 +162,7 @@ export function MapView({
       m.remove()
       map.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is created once; compactBelowZoom is fixed per map
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is created once; compactBelowZoom and walkToggle are fixed per map
   }, [])
 
   // Markers.
@@ -218,7 +232,8 @@ export function MapView({
   return <div ref={container} className={className} />
 }
 
-type LayerKey = 'mapTransit' | 'mapAmenities'
+type LayerKey = 'mapTransit' | 'mapAmenities' | 'mapWalks'
+const WALK_LAYERS = ['lines-walk']
 const layerOn = (key: LayerKey) => load<boolean>(key, (x) => (typeof x === 'boolean' ? x : null)) ?? true
 
 /** Map button that shows/hides a group of overlay layers; the choice is remembered. */

@@ -24,10 +24,14 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 - **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/costs`, `#/info`, `#/print?d=`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
 - **Data** (`src/data/`):
   - `types.ts` is the model.
-  - `places.ts` is the catalogue: 60 places in sections (centre, Frederiksstaden, Christianshavn, Nørrebro/Vesterbro/Frederiksberg, food & coffee, walks, day trips). It has helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`.
+  - `places.ts` is the catalogue: 80 places in sections (centre, Frederiksstaden, Christianshavn, Nørrebro/Vesterbro/Frederiksberg, food & coffee, 13 walks, day trips). It has helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`.
+  - `details.ts` holds the hand-written "What to see" highlights (≥3 per place, CS+EN, no prices or hours).
+  - `addresses.json` comes from `scripts/fetch_addresses.ts`: OSM reverse geocoding, plus an `OFFICIAL` override list for venues whose nearest road is wrong.
+  - `walks.geo.json` comes from `scripts/route_walks.ts`: each walk's waypoints routed once through Valhalla and simplified. Re-run it after changing waypoints; `data.test.ts` fails if a walk isn't routed.
+  - `data.test.ts` checks that every place has a photo, an address, highlights and pricing.
   - `prices.ts` gives `pricingFor(id)`.
   - `images.ts` holds the photos and `practical.ts` the Info page.
-  - `*.geo.json` are fixed OSM extracts: transit, landmarks, amenities.
+  - `*.geo.json` are fixed extracts: transit, landmarks, amenities (OSM), and walks (Valhalla).
 - **Pure logic** (`src/logic/`, unit-tested):
   - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight. `cphToUtc` and `dstShiftAfter` are for calendar export and DST reminders.
   - `hours.ts`: seasonal opening hours
@@ -39,6 +43,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - `filters.ts`: catalogue filtering and sorting
   - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.
   - `food.ts`: lunch. `lunchAfter` picks the stop after which the day breaks for lunch (none if a food stop is planned). `foodNear`/`lunchOptions` list open `food-market` places nearby, and `LunchHint` shows them in Plan (with "add here") and Today.
+  - `stations.ts`: `nearestStations` from the transit extract (metro/S-tog/regional, with lines). It feeds "Getting there" in `PlaceDetail`.
   - Also unit-tested, and described in their sections below: `weatherFit.ts`, `weatherSwap.ts`, `costs.ts`, `tiles.ts`, `amenities.ts`, `reminders.ts`, `ics.ts`, `sketch.ts`, `shareLocation.ts`, `polyline.ts`.
   - `suggest.ts`: "Suggest a day", a greedy fill. Each step picks the best-scoring unplanned place that's open for the whole visit, done before sunset if daylight-only, and within the day's hours/km including the way home. Food places are only picked for an arrival between 11:30 and 13:30, one per day. Score = rating, must-see bonus and lunch bonus, minus distance (which keeps the day clustered). `extraScore` is the hook for phase 4 weather.
 - **State** (`src/state/`):
@@ -75,7 +80,8 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Metro/S-tog/regional lines and stations come from `data/transit.geo.json`. The metro uses its official colours, with M1/M2 and M3/M4 offset where they share track. The S-tog uses one slate colour. The 🚇 button toggles them.
   - Landmark building outlines come from `data/landmarks.geo.json`.
   - Public toilets (points: fee / wheelchair / hours) and benches (one MultiPoint) come from `data/amenities.geo.json`. Toilets show from z13, with a "WC" label from z15 and a popup on tap (built with `textContent`, because OSM tags are untrusted). Benches show from z15.5. The 🚻 button toggles them (`mapAmenities`). `logic/amenities.ts` gives `nearestToilets`, which Today shows on the next-stop card (`ToiletNearby`).
-  - These GeoJSON files are fixed OSM extracts (see `scripts/README.md`) and don't change between zoom levels.
+  - Walks: the Guide draws each walk along its routed shape (`data/walks.ts` `walkShape`) as a faint `walk` line. The selected one is drawn as `walk-selected` (bold, always visible), and the 🚶 button (`walkToggle` prop, `mapWalks`) hides the faint ones. Timelines use `walkMetres` until a live route arrives.
+  - These GeoJSON files are fixed extracts (see `scripts/README.md`) and don't change between zoom levels.
   - Tile POIs, shields, one-way arrows and tile rail lines are hidden.
   - Overlays sit above the 3D `building` layers.
   - The Guide map passes `compactBelowZoom` (13.5): under it, markers become dots (CSS `.pins-small`).
