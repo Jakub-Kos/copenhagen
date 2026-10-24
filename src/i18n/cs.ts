@@ -314,4 +314,12 @@ export const cs: Dict = {
   moveToDay: 'Přesunout na {day}',
   rejseplanenHint: 'Přesné odjezdy a nástupiště v dánském plánovači spojení',
   transitHome: 'Domů MHD (Rejseplanen)',
+
+  // Practical info
+  navInfo: 'Info',
+  infoTitle: 'Praktické informace',
+  infoEmergency: 'Nouze – klepnutím zavoláte',
+  infoSources: 'Zdroje:',
+  infoPhrases: 'Pár dánských slov',
+  infoPhrasesHint: 'Anglicky mluví skoro každý; „tak“ (díky) ale vždycky potěší.',
 }

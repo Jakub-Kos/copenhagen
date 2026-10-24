@@ -324,6 +324,14 @@ export const en = {
   moveToDay: 'Move to {day}',
   rejseplanenHint: 'Exact departures and platforms in the Danish journey planner',
   transitHome: 'Home by public transport (Rejseplanen)',
+
+  // Practical info
+  navInfo: 'Info',
+  infoTitle: 'Practical info',
+  infoEmergency: 'Emergency – tap to call',
+  infoSources: 'Sources:',
+  infoPhrases: 'A few Danish words',
+  infoPhrasesHint: 'Almost everyone speaks English; a “tak” (thanks) is always appreciated.',
 }
 
 export type Dict = typeof en

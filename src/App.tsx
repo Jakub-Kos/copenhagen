@@ -7,6 +7,7 @@ import { UpdatePrompt } from '@/components/UpdatePrompt'
 import { StoreProvider } from '@/state/StoreProvider'
 import Costs from '@/pages/Costs'
 import Guide from '@/pages/Guide'
+import Info from '@/pages/Info'
 import Plan from '@/pages/Plan'
 import ShareImport from '@/pages/ShareImport'
 import Today from '@/pages/Today'
@@ -28,6 +29,7 @@ export default function App() {
               <Route path="/plan" element={<Plan />} />
               <Route path="/today" element={<Today />} />
               <Route path="/costs" element={<Costs />} />
+              <Route path="/info" element={<Info />} />
               <Route path="/share/:data" element={<ShareImport />} />
               <Route path="*" element={<Guide />} />
             </Routes>

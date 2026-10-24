@@ -21,7 +21,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 
 ## Architecture
 
-- **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
+- **Routing**: `HashRouter` (`#/`, `#/plan?d=YYYY-MM-DD|settings`, `#/today`, `#/costs`, `#/info`, `#/share/<lz-string trip>`). Deep links need no 404.html trick, and share data stays after `#`. `?lang=cs|en` works before or inside the hash.
 - **Data** (`src/data/`): `types.ts` is the model. `places.ts` is the catalogue, with helpers `daily()`/`closedMon()` for hours and shared walk waypoints in `P`. `prices.ts` gives `pricingFor(id)`; until phase 5, paid places return all-`null` prices.
 - **Pure logic** (`src/logic/`, unit-tested):
   - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight
@@ -70,6 +70,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Tile POIs, shields, one-way arrows and tile rail lines are hidden.
   - Overlays sit above the 3D `building` layers.
   - The Guide map passes `compactBelowZoom` (13.5): under it, markers become dots (CSS `.pins-small`).
+- **Practical info** (`#/info`): the content lives in `data/practical.ts` (emergency `tel:` numbers, tips, Danish phrases). Facts with a `source` were checked on 2026-10-24: 112/1813 at international.kk.dk, the embassy at mzv.gov.cz, Steno Apotek's 24 h hours on its own site, and the DKK 750 fine at international.kk.dk. Don't add facts you can't source.
 - **Photos**: `data/images.ts`, from Wikimedia Commons with author and licence. Always show the credit, as `PlaceDetail` does. Use `thumb(img, 250|500|960)` from `components/placeImage.ts`; Wikimedia only serves its standard widths.
 - **Offline** (phase 6):
   - `vite-plugin-pwa` (`registerType: 'prompt'`) precaches the app shell and guide data. Runtime caches: `cph-map-meta` (styles + tilejson, NetworkFirst), `cph-map` (tiles, fonts, sprites, CacheFirst), `cph-photos` (Wikimedia, CacheFirst). The names are shared by `vite.config.ts` and `services/offline.ts`; keep them in sync.
