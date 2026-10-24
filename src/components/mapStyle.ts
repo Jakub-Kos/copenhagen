@@ -9,11 +9,12 @@
 import type maplibregl from 'maplibre-gl'
 import type { ExpressionSpecification, LayerSpecification } from 'maplibre-gl'
 import type { FeatureCollection } from 'geojson'
+import amenities from '@/data/amenities.geo.json'
 import landmarks from '@/data/landmarks.geo.json'
 import transit from '@/data/transit.geo.json'
 
 const TILES = 'openmaptiles'
-const TRANSIT_LAYERS = [
+export const TRANSIT_LAYERS = [
   'cph-regional',
   'cph-stog',
   'cph-metro-casing',
@@ -21,6 +22,7 @@ const TRANSIT_LAYERS = [
   'cph-stations',
   'cph-station-labels',
 ]
+export const AMENITY_LAYERS = ['cph-benches', 'cph-toilets', 'cph-toilet-labels']
 
 interface Palette {
   park: string
@@ -34,6 +36,9 @@ interface Palette {
   halo: string
   landmarkLine: string
   landmarkFill: string
+  toilet: string
+  toiletPaid: string
+  bench: string
 }
 
 const LIGHT: Palette = {
@@ -48,6 +53,9 @@ const LIGHT: Palette = {
   halo: '#ffffff',
   landmarkLine: '#b45309',
   landmarkFill: '#f59e0b',
+  toilet: '#0e7490',
+  toiletPaid: '#64748b',
+  bench: '#92400e',
 }
 
 const DARK: Palette = {
@@ -62,6 +70,9 @@ const DARK: Palette = {
   halo: '#0f172a',
   landmarkLine: '#fbbf24',
   landmarkFill: '#f59e0b',
+  toilet: '#22d3ee',
+  toiletPaid: '#94a3b8',
+  bench: '#d6a46b',
 }
 
 const byZoom = (z11: number, z16: number): ExpressionSpecification => ['interpolate', ['linear'], ['zoom'], 11, z11, 16, z16]
@@ -164,6 +175,41 @@ function overlayLayers(c: Palette): LayerSpecification[] {
       },
     },
     {
+      id: 'cph-benches',
+      type: 'circle',
+      source: 'cph-amenities',
+      minzoom: 15.5,
+      filter: ['==', ['get', 'kind'], 'bench'],
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 15.5, 2, 18, 4],
+        'circle-color': c.bench,
+        'circle-stroke-color': c.casing,
+        'circle-stroke-width': 1,
+      },
+    },
+    {
+      id: 'cph-toilets',
+      type: 'circle',
+      source: 'cph-amenities',
+      minzoom: 13,
+      filter: ['==', ['get', 'kind'], 'toilet'],
+      paint: {
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 13, 3, 15, 9, 18, 11],
+        'circle-color': ['match', ['get', 'fee'], 'yes', c.toiletPaid, c.toilet],
+        'circle-stroke-color': c.casing,
+        'circle-stroke-width': 1.5,
+      },
+    },
+    {
+      id: 'cph-toilet-labels',
+      type: 'symbol',
+      source: 'cph-amenities',
+      minzoom: 15,
+      filter: ['==', ['get', 'kind'], 'toilet'],
+      layout: { 'text-field': 'WC', 'text-font': ['Noto Sans Bold'], 'text-size': 8.5, 'text-allow-overlap': true },
+      paint: { 'text-color': c.casing },
+    },
+    {
       id: 'cph-station-labels',
       type: 'symbol',
       source: 'cph-transit',
@@ -184,7 +230,7 @@ function overlayLayers(c: Palette): LayerSpecification[] {
 }
 
 /** Applies the adjustments; call after every style load. */
-export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible: boolean): void {
+export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible: boolean, amenitiesVisible: boolean): void {
   const style = map.getStyle()
   const c = dark ? DARK : LIGHT
   // Hide clutter: POI icons/labels (our markers carry the important places), road shields,
@@ -200,6 +246,7 @@ export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible:
 
   if (!map.getSource('cph-transit')) map.addSource('cph-transit', { type: 'geojson', data: transit as FeatureCollection })
   if (!map.getSource('cph-landmarks')) map.addSource('cph-landmarks', { type: 'geojson', data: landmarks as FeatureCollection })
+  if (!map.getSource('cph-amenities')) map.addSource('cph-amenities', { type: 'geojson', data: amenities as FeatureCollection })
 
   // Greens just under the roads; landmarks and transport above the (3D) buildings but under
   // the labels that follow them.
@@ -214,9 +261,10 @@ export function enhanceStyle(map: maplibregl.Map, dark: boolean, transitVisible:
   for (const l of overlayLayers(c)) {
     if (!map.getLayer(l.id)) map.addLayer(l, l.id === 'cph-station-labels' ? undefined : labelsAfterBuildings)
   }
-  setTransitVisible(map, transitVisible)
+  setVisible(map, TRANSIT_LAYERS, transitVisible)
+  setVisible(map, AMENITY_LAYERS, amenitiesVisible)
 }
 
-export function setTransitVisible(map: maplibregl.Map, on: boolean): void {
-  for (const id of TRANSIT_LAYERS) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none')
+export function setVisible(map: maplibregl.Map, layers: string[], on: boolean): void {
+  for (const id of layers) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none')
 }

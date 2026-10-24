@@ -294,4 +294,17 @@ export const cs: Dict = {
   updateNow: 'Aktualizovat',
   offlineReady: 'Aplikace teď funguje i offline.',
   liveOffline: 'Trasu odsud teď nelze spočítat (slabý signál?). Čárkovaná čára ukazuje směr, naplánované trasy fungují dál.',
+
+  // Map: toilets and benches
+  mapTransit: 'Metro / S-tog',
+  mapAmenities: 'WC a lavičky',
+  toiletTitle: 'Veřejné WC',
+  toiletFree: 'Zdarma',
+  toiletPaid: 'Placené',
+  toiletFeeUnknown: 'Poplatek neuveden',
+  toiletWheelchair: 'bezbariérové',
+  toiletHours: 'Otevřeno: {h}',
+  legendToilet: 'veřejné WC',
+  legendBench: 'lavička',
+  nearestToilet: 'WC poblíž: {d}',
 }

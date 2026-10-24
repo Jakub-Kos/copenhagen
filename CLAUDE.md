@@ -64,6 +64,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
   - Green areas use the tiles.
   - Metro/S-tog/regional lines and stations come from `data/transit.geo.json`. The metro uses its official colours, with M1/M2 and M3/M4 offset where they share track. The S-tog uses one slate colour. The 🚇 button toggles them.
   - Landmark building outlines come from `data/landmarks.geo.json`.
+  - Public toilets (points: fee / wheelchair / hours) and benches (one MultiPoint) come from `data/amenities.geo.json`. Toilets show from z13, with a "WC" label from z15 and a popup on tap (built with `textContent`, because OSM tags are untrusted). Benches show from z15.5. The 🚻 button toggles them (`mapAmenities`). `logic/amenities.ts` gives `nearestToilets`, which Today shows on the next-stop card (`ToiletNearby`).
   - These GeoJSON files are fixed OSM extracts (see `scripts/README.md`) and don't change between zoom levels.
   - Tile POIs, shields, one-way arrows and tile rail lines are hidden.
   - Overlays sit above the 3D `building` layers.

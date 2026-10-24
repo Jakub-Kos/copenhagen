@@ -6,7 +6,9 @@ import type { LatLng, Place } from '@/data/types'
 import type { HomeBase } from '@/state/tripTypes'
 import { load, save } from '@/state/storage'
 import { KIND_ICON, WEATHER_COLOR } from './kindStyle'
-import { enhanceStyle, setTransitVisible } from './mapStyle'
+import { useT } from '@/i18n/useT'
+import { googleMapsDirections } from '@/logic/geo'
+import { AMENITY_LAYERS, TRANSIT_LAYERS, enhanceStyle, setVisible } from './mapStyle'
 
 // OpenFreeMap: free, no key, no request limits; the style carries the OSM/OpenMapTiles attribution.
 const STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/liberty'
@@ -68,11 +70,14 @@ export function MapView({
   const onSelectRef = useRef(onSelect)
   const onLocRef = useRef(onUserLocation)
   const linesRef = useRef(lines)
+  const { t } = useT()
+  const tRef = useRef(t)
 
   useEffect(() => {
     onSelectRef.current = onSelect
     onLocRef.current = onUserLocation
     linesRef.current = lines
+    tRef.current = t
   })
 
   // Create the map once.
@@ -95,8 +100,20 @@ export function MapView({
       onLocRef.current?.({ lat: e.coords.latitude, lng: e.coords.longitude }),
     )
     m.addControl(geo, 'top-right')
-    m.addControl(new TransitToggle(), 'top-right')
-    m.on('style.load', () => enhanceStyle(m, dark, transitOn()))
+    m.addControl(new LayerToggle('🚇', tRef.current('mapTransit'), 'mapTransit', TRANSIT_LAYERS), 'top-right')
+    m.addControl(new LayerToggle('🚻', tRef.current('mapAmenities'), 'mapAmenities', AMENITY_LAYERS), 'top-right')
+    m.on('style.load', () => enhanceStyle(m, dark, layerOn('mapTransit'), layerOn('mapAmenities')))
+    m.on('click', 'cph-toilets', (e) => {
+      const f = e.features?.[0]
+      if (!f || f.geometry.type !== 'Point') return
+      const [lng, lat] = f.geometry.coordinates
+      new maplibregl.Popup({ closeButton: true, maxWidth: '240px' })
+        .setLngLat([lng, lat])
+        .setDOMContent(toiletPopup(f.properties ?? {}, { lat, lng }, tRef.current))
+        .addTo(m)
+    })
+    m.on('mouseenter', 'cph-toilets', () => (m.getCanvas().style.cursor = 'pointer'))
+    m.on('mouseleave', 'cph-toilets', () => (m.getCanvas().style.cursor = ''))
     if (compactBelowZoom) {
       const compact = () => m.getContainer().classList.toggle('pins-small', m.getZoom() < compactBelowZoom)
       m.on('zoom', compact)
@@ -201,28 +218,41 @@ export function MapView({
   return <div ref={container} className={className} />
 }
 
-const transitOn = () => load<boolean>('mapTransit', (x) => (typeof x === 'boolean' ? x : null)) ?? true
+type LayerKey = 'mapTransit' | 'mapAmenities'
+const layerOn = (key: LayerKey) => load<boolean>(key, (x) => (typeof x === 'boolean' ? x : null)) ?? true
 
-/** Map button that shows/hides the public-transport layer; the choice is remembered. */
-class TransitToggle implements maplibregl.IControl {
+/** Map button that shows/hides a group of overlay layers; the choice is remembered. */
+class LayerToggle implements maplibregl.IControl {
   private el: HTMLDivElement | null = null
+  private readonly icon: string
+  private readonly title: string
+  private readonly key: LayerKey
+  private readonly layers: string[]
+
+  constructor(icon: string, title: string, key: LayerKey, layers: string[]) {
+    this.icon = icon
+    this.title = title
+    this.key = key
+    this.layers = layers
+  }
 
   onAdd(map: maplibregl.Map) {
     const el = document.createElement('div')
     el.className = 'maplibregl-ctrl maplibregl-ctrl-group'
     const btn = document.createElement('button')
     btn.type = 'button'
-    btn.textContent = '🚇'
-    btn.title = 'Metro / S-tog'
+    btn.textContent = this.icon
+    btn.title = this.title
+    btn.setAttribute('aria-label', this.title)
     const paint = (on: boolean) => {
       btn.setAttribute('aria-pressed', String(on))
       btn.style.opacity = on ? '1' : '0.45'
     }
-    paint(transitOn())
+    paint(layerOn(this.key))
     btn.addEventListener('click', () => {
-      const on = !transitOn()
-      save('mapTransit', on)
-      setTransitVisible(map, on)
+      const on = !layerOn(this.key)
+      save(this.key, on)
+      setVisible(map, this.layers, on)
       paint(on)
     })
     el.appendChild(btn)
@@ -233,6 +263,28 @@ class TransitToggle implements maplibregl.IControl {
   onRemove() {
     this.el?.remove()
   }
+}
+
+/** Popup for an OSM toilet; built with textContent because the tags are untrusted. */
+function toiletPopup(props: Record<string, unknown>, at: LatLng, t: ReturnType<typeof useT>['t']): HTMLElement {
+  const el = document.createElement('div')
+  el.className = 'toilet-popup'
+  const add = (tag: string, text: string, cls = '') => {
+    const x = document.createElement(tag)
+    x.textContent = text
+    if (cls) x.className = cls
+    el.appendChild(x)
+    return x
+  }
+  add('strong', `🚻 ${t('toiletTitle')}`)
+  add('div', props.fee === 'yes' ? t('toiletPaid') : props.fee === 'no' ? t('toiletFree') : t('toiletFeeUnknown'))
+  if (props.wheelchair) add('div', `♿ ${t('toiletWheelchair')}`)
+  if (typeof props.hours === 'string') add('div', t('toiletHours', { h: props.hours }), 'muted')
+  const a = add('a', `${t('navigate')} ↗`) as HTMLAnchorElement
+  a.href = googleMapsDirections(at)
+  a.target = '_blank'
+  a.rel = 'noreferrer'
+  return el
 }
 
 function linesGeoJson(lines: MapLine[]): FeatureCollection {

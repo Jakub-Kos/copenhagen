@@ -127,3 +127,21 @@
   border: 3px solid var(--pin-color);
   transform: none;
 }
+
+/* Toilet popup on the map (MapLibre popups are always light). */
+.toilet-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  color: #0f172a;
+}
+.toilet-popup .muted {
+  font-size: 12px;
+  color: #64748b;
+}
+.toilet-popup a {
+  margin-top: 4px;
+  font-weight: 600;
+  color: #4338ca;
+}

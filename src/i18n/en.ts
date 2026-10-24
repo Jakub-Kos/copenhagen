@@ -304,6 +304,19 @@ export const en = {
   updateNow: 'Update',
   offlineReady: 'The app now works offline.',
   liveOffline: 'No route from here right now (weak signal?). The dashed line shows the direction; the planned routes still work.',
+
+  // Map: toilets and benches
+  mapTransit: 'Metro / S-tog',
+  mapAmenities: 'Toilets and benches',
+  toiletTitle: 'Public toilet',
+  toiletFree: 'Free',
+  toiletPaid: 'Paid',
+  toiletFeeUnknown: 'Fee not stated',
+  toiletWheelchair: 'wheelchair accessible',
+  toiletHours: 'Hours: {h}',
+  legendToilet: 'public toilet',
+  legendBench: 'bench',
+  nearestToilet: 'Toilet nearby: {d}',
 }
 
 export type Dict = typeof en

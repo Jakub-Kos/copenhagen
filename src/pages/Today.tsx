@@ -5,6 +5,7 @@ import { KIND_ICON } from '@/components/kindStyle'
 import { LegRow } from '@/components/LegRow'
 import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
 import { LunchHint } from '@/components/LunchHint'
+import { ToiletNearby } from '@/components/ToiletNearby'
 import { OfflineCard } from '@/components/OfflineCard'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
@@ -169,6 +170,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
                           <Navigation size={20} /> {t('navigate')}
                         </a>
                       )}
+                      {isNext && <ToiletNearby at={entryPoint(s.place)} />}
                       {isNext && <LiveRoute targets={liveTargets} speedKmh={trip.walkingSpeedKmh} onLine={setLiveLine} />}
                     </div>
                   </div>
