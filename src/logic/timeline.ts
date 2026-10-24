@@ -15,8 +15,10 @@ export interface Leg {
   mode: LegMode
   metres: number
   minutes: number
-  /** false once a real route (Valhalla) has replaced the straight-line guess. */
+  /** false once a real route (Valhalla, or a Transitous journey) has replaced the guess. */
   estimated: boolean
+  /** Walking within a public-transport journey (to and from the stops), when known. */
+  walkMetres?: number
 }
 
 export interface TimelineStop {
@@ -92,13 +94,20 @@ export interface TimelineOptions {
   weatherFor?: (p: Place, from: number, to: number) => Fit | null
   /** Real routes by `legKey` (legs) or `walkKey` (inside street walks), used instead of estimates. */
   routes?: ReadonlyMap<string, { metres: number; minutes: number }>
+  /** Real public-transport journeys by `legKey`: door-to-door minutes and the walking in them. */
+  transit?: ReadonlyMap<string, { minutes: number; walkMetres: number }>
 }
 
 export const legKey = (a: LatLng, b: LatLng): string =>
   `${a.lat.toFixed(5)},${a.lng.toFixed(5)}>${b.lat.toFixed(5)},${b.lng.toFixed(5)}`
 
 function makeLeg(from: LatLng, to: LatLng, mode: LegMode, o: TimelineOptions): Leg {
-  const known = mode === 'walk' ? o.routes?.get(legKey(from, to)) : undefined
+  if (mode === 'transit') {
+    const ride = o.transit?.get(legKey(from, to))
+    const est = estimateLeg(from, to, mode, o.speedKmh)
+    return ride ? { ...est, minutes: ride.minutes, walkMetres: ride.walkMetres, estimated: false } : est
+  }
+  const known = o.routes?.get(legKey(from, to))
   if (known) return { from, to, mode, ...known, estimated: false }
   return estimateLeg(from, to, mode, o.speedKmh)
 }
@@ -119,7 +128,7 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
     if (prev) {
       leg = makeLeg(prev, entryPoint(place), s.legMode, o)
       t += leg.minutes
-      if (leg.mode === 'walk') walkM += leg.metres
+      walkM += leg.mode === 'walk' ? leg.metres : (leg.walkMetres ?? 0)
     }
     const arrive = t
     const leave = arrive + (s.visitMin ?? place.durationMin)
@@ -143,7 +152,7 @@ export function buildTimeline(day: DayPlan, lookup: (id: string) => Place | unde
     const metres = estimateWalkM(prev, o.origin)
     homeLeg = makeLeg(prev, o.origin, metres / 1000 > o.transitThresholdKm ? 'transit' : 'walk', o)
     t += homeLeg.minutes
-    if (homeLeg.mode === 'walk') walkM += homeLeg.metres
+    walkM += homeLeg.mode === 'walk' ? homeLeg.metres : (homeLeg.walkMetres ?? 0)
   }
 
   const hours = (t - startMin) / 60
@@ -171,6 +180,27 @@ export function routeSpecs(tl: Timeline): RouteSpec[] {
     if (wp && !out.some((x) => x.id === walkKey(s.place.id))) {
       out.push({ id: walkKey(s.place.id), points: wp.map((p, i) => ({ ...p, through: i > 0 && i < wp.length - 1 })) })
     }
+  }
+  return out
+}
+
+/** A public-transport leg to look up: from, to and the planned departure (minutes). */
+export interface TransitSpec {
+  id: string
+  from: LatLng
+  to: LatLng
+  depart: number
+}
+
+/** The transit legs of a timeline with their planned departures; ids match `legKey`. */
+export function transitSpecs(tl: Timeline): TransitSpec[] {
+  const out: TransitSpec[] = []
+  for (const s of tl.stops) {
+    if (s.leg?.mode === 'transit') out.push({ id: legKey(s.leg.from, s.leg.to), from: s.leg.from, to: s.leg.to, depart: s.arrive - s.leg.minutes })
+  }
+  const last = tl.stops.at(-1)
+  if (tl.homeLeg?.mode === 'transit' && last) {
+    out.push({ id: legKey(tl.homeLeg.from, tl.homeLeg.to), from: tl.homeLeg.from, to: tl.homeLeg.to, depart: last.leave })
   }
   return out
 }

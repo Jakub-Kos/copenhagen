@@ -73,7 +73,7 @@ export default function Today() {
 
 function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: number }) {
   const { t, bi, lang } = useT()
-  const { tl, legRoute, lines: dayLines } = useTimeline(trip, date)
+  const { tl, legRoute, legTransit, lines: dayLines } = useTimeline(trip, date)
   const [liveLine, setLiveLine] = useState<MapLine | null>(null)
   const warned = (stopId: string, kind: 'closed' | 'dark' | 'rain' | 'wind') =>
     tl.warnings.some((w) => w.kind === kind && w.stopId === stopId)
@@ -127,7 +127,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
               const isDone = nextIdx === -1 || i < nextIdx
               return (
                 <li key={s.stopId}>
-                  {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} trip={legTripInto(tl, i, date, trip.homeBase?.label ?? '')} />}
+                  {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} transit={legTransit(s.leg)} trip={legTripInto(tl, i, date, trip.homeBase?.label ?? '')} />}
                   <div
                     className={cx(
                       'overflow-hidden rounded-xl border',

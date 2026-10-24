@@ -18,7 +18,9 @@ export interface MapLine {
   id: string
   coords: LatLng[]
   /** walk = catalogue walk (faint, toggleable); walk-selected = the open walk; route = real walking route; estimate = straight line until routed. */
-  style: 'walk' | 'walk-selected' | 'route' | 'estimate' | 'transit'
+  style: 'walk' | 'walk-selected' | 'route' | 'estimate' | 'transit' | 'ride'
+  /** Line colour for `ride` (a bus, metro or train line). */
+  color?: string
 }
 
 export interface MapViewProps {
@@ -50,6 +52,7 @@ const LINE_PAINT: Record<MapLine['style'], { color: string; width: number; dash?
   route: { color: '#4f46e5', width: 5 },
   estimate: { color: '#4f46e5', width: 3, dash: [0.5, 2] },
   transit: { color: '#64748b', width: 3, dash: [1, 2] },
+  ride: { color: '#64748b', width: 5 },
 }
 
 export function MapView({
@@ -131,7 +134,7 @@ export function MapView({
         id: 'lines-casing',
         type: 'line',
         source: 'lines',
-        filter: ['match', ['get', 'style'], ['route', 'walk-selected'], true, false],
+        filter: ['match', ['get', 'style'], ['route', 'walk-selected', 'ride'], true, false],
         layout: { 'line-cap': 'round', 'line-join': 'round' },
         paint: { 'line-color': '#ffffff', 'line-width': 8, 'line-opacity': 0.9 },
       })
@@ -147,7 +150,7 @@ export function MapView({
             visibility: WALK_LAYERS.includes(`lines-${style}`) && walkToggle && !layerOn('mapWalks') ? 'none' : 'visible',
           },
           paint: {
-            'line-color': p.color,
+            'line-color': style === 'ride' ? ['coalesce', ['get', 'color'], p.color] : p.color,
             'line-width': p.width,
             ...(p.dash ? { 'line-dasharray': p.dash } : {}),
             ...(p.opacity ? { 'line-opacity': p.opacity } : {}),
@@ -307,7 +310,7 @@ function linesGeoJson(lines: MapLine[]): FeatureCollection {
     type: 'FeatureCollection',
     features: lines.map((l) => ({
       type: 'Feature',
-      properties: { id: l.id, style: l.style },
+      properties: { id: l.id, style: l.style, ...(l.color ? { color: l.color } : {}) },
       geometry: { type: 'LineString', coordinates: l.coords.map(toLngLat) },
     })),
   }

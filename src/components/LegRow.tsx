@@ -4,6 +4,9 @@ import { googleMapsDirections, rejseplanenUrl, steps } from '@/logic/geo'
 import type { Leg } from '@/logic/timeline'
 import { type IsoDate, formatDuration } from '@/logic/time'
 import type { RouteEntry } from '@/state/routeStore'
+import type { TransitEntry } from '@/state/transitStore'
+import { TRANSITOUS_SOURCES } from '@/services/transitous'
+import { fromMinutes } from '@/logic/time'
 import type { LegMode } from '@/state/tripTypes'
 import { cx } from './cls'
 import { Directions } from './Directions'
@@ -25,9 +28,11 @@ export function LegRow({
   route,
   onMode,
   trip,
+  transit,
 }: {
   leg: Leg
   route?: RouteEntry
+  transit?: TransitEntry
   onMode?: (m: LegMode) => void
   trip?: LegTrip
 }) {
@@ -87,6 +92,32 @@ export function LegRow({
         </a>
       </div>
       {route?.status === 'ok' && leg.mode === 'walk' && <Directions route={route.route} />}
+      {leg.mode === 'transit' && transit?.status === 'ok' && (
+        <ol className="flex flex-col gap-0.5">
+          {transit.plan.legs.map((l, i) => (
+            <li key={i} className="flex flex-wrap items-center gap-1.5">
+              {l.mode === 'walk' ? (
+                <span>🚶 {l.minutes} min</span>
+              ) : (
+                <>
+                  <span className="rounded px-1.5 text-xs font-bold text-white" style={{ background: l.color }}>
+                    {l.line || l.mode}
+                  </span>
+                  <span>
+                    {fromMinutes(l.from.time)} {l.from.name} → {fromMinutes(l.to.time)} {l.to.name}
+                    {l.headsign && <span className="text-slate-400"> ({l.headsign})</span>}
+                  </span>
+                </>
+              )}
+            </li>
+          ))}
+          <li className="text-xs text-slate-400">
+            <a href={TRANSITOUS_SOURCES} target="_blank" rel="noreferrer" className="text-slate-400">
+              Transitous ↗
+            </a>
+          </li>
+        </ol>
+      )}
     </div>
   )
 }

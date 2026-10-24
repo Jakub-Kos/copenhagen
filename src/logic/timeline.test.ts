@@ -115,3 +115,22 @@ describe('suggestLegMode', () => {
     expect(suggestLegMode(null, null, nyhavn, 3)).toBe('walk')
   })
 })
+
+describe('real public-transport journeys', () => {
+  it('replace the transit estimate and add their walking', () => {
+    const day = {
+      startTime: '09:00',
+      stops: [{ id: 'a', placeId: 'louisiana', legMode: 'transit' as const, visitMin: 60 }],
+    }
+    const home = { lat: 55.6895, lng: 12.554 }
+    const o = { date: '2026-10-27', speedKmh: 4.5, origin: home, maxDayHours: 12, maxDayKm: 20, transitThresholdKm: 3 }
+    const lookup = (id: string) => placeById.get(id)
+    const est = buildTimeline(day, lookup, o)
+    const leg = est.stops[0].leg!
+    expect(leg.estimated).toBe(true)
+    const real = buildTimeline(day, lookup, { ...o, transit: new Map([[legKey(leg.from, leg.to), { minutes: 66, walkMetres: 900 }]]) })
+    expect(real.stops[0].leg).toMatchObject({ minutes: 66, estimated: false, walkMetres: 900 })
+    expect(real.stops[0].arrive).toBe(9 * 60 + 66)
+    expect(real.walkM).toBe(est.walkM + 900)
+  })
+})

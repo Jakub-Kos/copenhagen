@@ -55,7 +55,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const { dispatch } = useStore()
   const save = (next: Trip) => dispatch({ type: 'upsertTrip', trip: next })
   const day = dayOf(trip, date)
-  const { tl, legRoute, walkRoute, lines } = useTimeline(trip, date)
+  const { tl, legRoute, walkRoute, legTransit, lines } = useTimeline(trip, date)
   const { forecast } = useForecast()
   const [optimising, setOptimising] = useState(false)
   const [notice, setNotice] = useState<'optimiseFailed' | 'nothingFits' | null>(null)
@@ -140,7 +140,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
   const canOptimise = tl.stops.length >= (trip.homeBase ? 2 : 4)
 
   return (
-    <div className="flex flex-col gap-4 md:grid md:grid-cols-[1fr_1fr] md:items-start">
+    <div className="flex flex-col gap-4 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] md:items-start">
       <div className="flex flex-col gap-3">
         <WeatherStrip date={date} />
         <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
@@ -174,6 +174,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                   <LegRow
                     leg={s.leg}
                     route={legRoute(s.leg)}
+                    transit={legTransit(s.leg)}
                     trip={legTripInto(tl, i, date, trip.homeBase?.label ?? '')}
                     onMode={(m) => save(updateStop(trip, date, s.stopId, { legMode: m }))}
                   />
@@ -267,7 +268,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
 
         {tl.homeLeg && trip.homeBase && (
           <div>
-            <LegRow leg={tl.homeLeg} route={legRoute(tl.homeLeg)} trip={legTripHome(tl, date, trip.homeBase.label)} />
+            <LegRow leg={tl.homeLeg} route={legRoute(tl.homeLeg)} transit={legTransit(tl.homeLeg)} trip={legTripHome(tl, date, trip.homeBase.label)} />
             <div className="ml-1 text-sm font-medium">🏠 {t('backHome', { home: trip.homeBase.label })} · {fromMinutes(tl.end)}</div>
           </div>
         )}
@@ -351,7 +352,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
 
       {tl.stops.length > 0 && (
         <MapView
-          className="h-[45dvh] w-full overflow-hidden rounded-xl md:sticky md:top-20"
+          className="h-[60dvh] w-full overflow-hidden rounded-xl md:sticky md:top-20 md:h-[calc(100dvh-7rem)]"
           places={dayPlaces}
           badges={badges}
           home={trip.homeBase}
