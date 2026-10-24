@@ -26,7 +26,7 @@ A standalone Copenhagen guide and trip planner, specified in `copenhagen-trip-pl
 - **Pure logic** (`src/logic/`, unit-tested):
   - `time.ts`: Copenhagen time via `Intl`; dates are `YYYY-MM-DD` strings, clock times are minutes since midnight
   - `hours.ts`: seasonal opening hours
-  - `geo.ts`: haversine × 1.3 detour estimate, Google Maps links
+  - `geo.ts`: haversine × 1.3 detour estimate, Google Maps links, and `rejseplanenUrl`. That builds a rejseplanen.dk/web/ search with `SKOORD/SX/SY` and `ZKOORD/ZX/ZY` in micro-degrees, plus `date=DD.MM.YYYY`, `time=HH:MM` and `timeSel=depart`, or `SCURRENT=1` to start from the phone's location; this format was checked against the live site on 2026-10-24. Transit legs in Plan and Today get a Rejseplanen button (`components/legTrip.ts` gives the departure time and English names). Today also has "Home by public transport".
   - `timeline.ts`: day schedule, legs and warnings. Street walks enter at their first waypoint and exit at their last. `TimelineOptions.routes` (keyed by `legKey`) is where real Valhalla legs replace the estimates.
   - `filters.ts`: catalogue filtering and sorting
   - `sun.ts`: offline NOAA sunrise/sunset. It drives the `dark` warning (daylight-only stops past sunset) and `Timeline.sunset`.

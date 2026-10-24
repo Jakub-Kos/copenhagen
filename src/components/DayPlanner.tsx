@@ -26,6 +26,7 @@ import {
 import type { Trip } from '@/state/tripTypes'
 import { KIND_ICON } from './kindStyle'
 import { LegRow } from './LegRow'
+import { legTripHome, legTripInto } from './legTrip'
 import { LunchHint } from './LunchHint'
 import { Directions } from './Directions'
 import { MapView } from './MapView'
@@ -175,7 +176,14 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
                   drop(i)
                 }}
               >
-                {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} onMode={(m) => save(updateStop(trip, date, s.stopId, { legMode: m }))} />}
+                {s.leg && (
+                  <LegRow
+                    leg={s.leg}
+                    route={legRoute(s.leg)}
+                    trip={legTripInto(tl, i, date, trip.homeBase?.label ?? '')}
+                    onMode={(m) => save(updateStop(trip, date, s.stopId, { legMode: m }))}
+                  />
+                )}
                 <div
                   draggable
                   onDragStart={(e) => {
@@ -275,7 +283,7 @@ export function DayPlanner({ trip, date }: { trip: Trip; date: IsoDate }) {
 
         {tl.homeLeg && trip.homeBase && (
           <div>
-            <LegRow leg={tl.homeLeg} route={legRoute(tl.homeLeg)} />
+            <LegRow leg={tl.homeLeg} route={legRoute(tl.homeLeg)} trip={legTripHome(tl, date, trip.homeBase.label)} />
             <div className="ml-1 text-sm font-medium">🏠 {t('backHome', { home: trip.homeBase.label })} · {fromMinutes(tl.end)}</div>
           </div>
         )}

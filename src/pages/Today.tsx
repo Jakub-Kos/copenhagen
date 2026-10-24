@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Home, Navigation } from 'lucide-react'
+import { Home, Navigation, TrainFront } from 'lucide-react'
 import { KIND_ICON } from '@/components/kindStyle'
 import { LegRow } from '@/components/LegRow'
+import { legTripInto } from '@/components/legTrip'
 import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
 import { LunchHint } from '@/components/LunchHint'
 import { ToiletNearby } from '@/components/ToiletNearby'
@@ -14,7 +15,7 @@ import { WeatherStrip } from '@/components/WeatherStrip'
 import { WeatherSwap } from '@/components/WeatherSwap'
 import { imageFor, thumb } from '@/components/placeImage'
 import { useT } from '@/i18n/useT'
-import { googleMapsDirections } from '@/logic/geo'
+import { googleMapsDirections, rejseplanenUrl } from '@/logic/geo'
 import { entryPoint } from '@/logic/timeline'
 import { type IsoDate, formatDayLong, fromMinutes, nowMinutesInCph, todayInCph } from '@/logic/time'
 import { useActiveTrip } from '@/state/store'
@@ -119,7 +120,7 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
               const isDone = nextIdx === -1 || i < nextIdx
               return (
                 <li key={s.stopId}>
-                  {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} />}
+                  {s.leg && <LegRow leg={s.leg} route={legRoute(s.leg)} trip={legTripInto(tl, i, date, trip.homeBase?.label ?? '')} />}
                   <div
                     className={cx(
                       'overflow-hidden rounded-xl border',
@@ -198,6 +199,17 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
           className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 no-underline dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
         >
           <Home size={18} /> {t('navigateHome')} ({trip.homeBase.label})
+        </a>
+      )}
+      {trip.homeBase && (
+        <a
+          href={rejseplanenUrl('here', { coords: trip.homeBase.coords, name: trip.homeBase.label })}
+          target="_blank"
+          rel="noreferrer"
+          title={t('rejseplanenHint')}
+          className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 no-underline dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        >
+          <TrainFront size={18} /> {t('transitHome')}
         </a>
       )}
 

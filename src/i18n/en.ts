@@ -322,6 +322,8 @@ export const en = {
   swapInstead: 'Instead, nearby:',
   swapDo: 'Swap',
   moveToDay: 'Move to {day}',
+  rejseplanenHint: 'Exact departures and platforms in the Danish journey planner',
+  transitHome: 'Home by public transport (Rejseplanen)',
 }
 
 export type Dict = typeof en

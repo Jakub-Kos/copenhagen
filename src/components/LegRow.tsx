@@ -1,8 +1,8 @@
 import { Bus, Footprints } from 'lucide-react'
 import { useT } from '@/i18n/useT'
-import { googleMapsDirections, steps } from '@/logic/geo'
+import { googleMapsDirections, rejseplanenUrl, steps } from '@/logic/geo'
 import type { Leg } from '@/logic/timeline'
-import { formatDuration } from '@/logic/time'
+import { type IsoDate, formatDuration } from '@/logic/time'
 import type { RouteEntry } from '@/state/routeStore'
 import type { LegMode } from '@/state/tripTypes'
 import { cx } from './cls'
@@ -10,8 +10,27 @@ import { Directions } from './Directions'
 
 const km = (m: number) => (m / 1000).toFixed(1)
 
+/** Where and when a public-transport leg starts, for the Rejseplanen link. */
+export interface LegTrip {
+  date: IsoDate
+  /** Departure, minutes since midnight. */
+  depart: number
+  fromName: string
+  toName: string
+}
+
 /** The connector between two stops: mode, distance, time, directions. */
-export function LegRow({ leg, route, onMode }: { leg: Leg; route?: RouteEntry; onMode?: (m: LegMode) => void }) {
+export function LegRow({
+  leg,
+  route,
+  onMode,
+  trip,
+}: {
+  leg: Leg
+  route?: RouteEntry
+  onMode?: (m: LegMode) => void
+  trip?: LegTrip
+}) {
   const { t } = useT()
   const Icon = leg.mode === 'walk' ? Footprints : Bus
   const status =
@@ -46,6 +65,17 @@ export function LegRow({ leg, route, onMode }: { leg: Leg; route?: RouteEntry; o
               </button>
             ))}
           </span>
+        )}
+        {leg.mode === 'transit' && trip && (
+          <a
+            href={rejseplanenUrl({ coords: leg.from, name: trip.fromName }, { coords: leg.to, name: trip.toName }, trip)}
+            target="_blank"
+            rel="noreferrer"
+            title={t('rejseplanenHint')}
+            className="inline-flex min-h-9 items-center rounded-md bg-accent px-2.5 font-semibold text-white no-underline hover:bg-accent-strong"
+          >
+            Rejseplanen ↗
+          </a>
         )}
         <a
           href={googleMapsDirections(leg.to, leg.from, leg.mode === 'walk' ? 'walking' : 'transit')}

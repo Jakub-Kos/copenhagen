@@ -312,4 +312,6 @@ export const cs: Dict = {
   swapInstead: 'Místo toho poblíž:',
   swapDo: 'Vyměnit',
   moveToDay: 'Přesunout na {day}',
+  rejseplanenHint: 'Přesné odjezdy a nástupiště v dánském plánovači spojení',
+  transitHome: 'Domů MHD (Rejseplanen)',
 }

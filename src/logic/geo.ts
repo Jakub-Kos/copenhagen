@@ -44,6 +44,40 @@ export function parseLatLng(s: string): LatLng | null {
   return { lat, lng }
 }
 
+/**
+ * Rejseplanen (Danish journey planner) search. Coordinates go in as micro-degrees
+ * (SX/SY, ZX/ZY with SKOORD/ZKOORD=1), the format rejseplanen.dk/web/ turns into a search;
+ * `'here'` starts from the phone's location (SCURRENT). Without `at` it departs now.
+ */
+export function rejseplanenUrl(
+  from: { coords: LatLng; name: string } | 'here',
+  to: { coords: LatLng; name: string },
+  at?: { date: string; depart: number },
+): string {
+  const micro = (v: number) => String(Math.round(v * 1e6))
+  const p = new URLSearchParams()
+  if (from === 'here') p.set('SCURRENT', '1')
+  else {
+    p.set('SKOORD', '1')
+    p.set('SX', micro(from.coords.lng))
+    p.set('SY', micro(from.coords.lat))
+    p.set('SNAME', from.name)
+  }
+  p.set('ZKOORD', '1')
+  p.set('ZX', micro(to.coords.lng))
+  p.set('ZY', micro(to.coords.lat))
+  p.set('ZNAME', to.name)
+  if (at) {
+    const [y, m, d] = at.date.split('-')
+    const hh = String(Math.floor(at.depart / 60) % 24).padStart(2, '0')
+    const mm = String(Math.round(at.depart % 60)).padStart(2, '0')
+    p.set('date', `${d}.${m}.${y}`)
+    p.set('time', `${hh}:${mm}`)
+  }
+  p.set('timeSel', 'depart')
+  return `https://www.rejseplanen.dk/web/?${p}`
+}
+
 /** Google Maps walking directions; transit for public-transport legs. */
 export function googleMapsDirections(to: LatLng, from?: LatLng, mode: 'walking' | 'transit' = 'walking'): string {
   const p = new URLSearchParams({ api: '1', destination: `${to.lat},${to.lng}`, travelmode: mode })
