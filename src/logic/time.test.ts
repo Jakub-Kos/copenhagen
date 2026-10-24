@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, cphParts, datesBetween, fromMinutes, toMinutes, weekdayOf } from './time'
+import { addDays, cphParts, cphToUtc, datesBetween, dstShiftAfter, fromMinutes, toMinutes, weekdayOf } from './time'
 
 describe('Copenhagen time', () => {
   it('uses summer time before the 25 Oct 2026 switch', () => {
@@ -25,5 +25,18 @@ describe('Copenhagen time', () => {
     expect(toMinutes('09:30')).toBe(570)
     expect(fromMinutes(570)).toBe('09:30')
     expect(fromMinutes(1450)).toBe('00:10')
+  })
+})
+
+describe('cphToUtc / dstShiftAfter', () => {
+  it('converts Copenhagen local times on both sides of the October change', () => {
+    expect(cphToUtc('2026-10-24', 9 * 60).toISOString()).toBe('2026-10-24T07:00:00.000Z')
+    expect(cphToUtc('2026-10-26', 9 * 60).toISOString()).toBe('2026-10-26T08:00:00.000Z')
+  })
+
+  it('finds the night the clocks change', () => {
+    expect(dstShiftAfter('2026-10-24')).toBe(-60)
+    expect(dstShiftAfter('2026-10-25')).toBe(0)
+    expect(dstShiftAfter('2026-03-28')).toBe(60)
   })
 })

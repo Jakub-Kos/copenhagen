@@ -10,6 +10,8 @@ export interface TripCosts {
   dates: IsoDate[]
   items: CostItem[]
   verdicts: CardVerdict[]
+  /** Estimated timeline per trip date. */
+  timelines: ReadonlyMap<IsoDate, Timeline>
 }
 
 /** Cost items for every planned day (estimated timelines are precise enough for pass windows). */
@@ -31,6 +33,6 @@ export function useTripCosts(trip: Trip): TripCosts {
       )
     }
     const items = costItems(trip, timelines, dates)
-    return { dates, items, verdicts: trip.group.length ? cardVerdicts(items, trip.group) : [] }
+    return { dates, items, verdicts: trip.group.length ? cardVerdicts(items, trip.group) : [], timelines }
   }, [trip])
 }

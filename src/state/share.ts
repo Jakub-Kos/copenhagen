@@ -81,6 +81,10 @@ export function parseTrip(x: unknown): Trip | null {
     paid: isObj(x.paid)
       ? Object.fromEntries(Object.entries(x.paid).filter((e): e is [string, boolean] => typeof e[1] === 'boolean'))
       : {},
+    // Added after v1 shipped: older trips simply have none.
+    done: isObj(x.done)
+      ? Object.fromEntries(Object.entries(x.done).filter((e): e is [string, boolean] => typeof e[1] === 'boolean'))
+      : {},
     budgetDkk: typeof x.budgetDkk === 'number' && x.budgetDkk > 0 ? x.budgetDkk : null,
     czkRate: typeof x.czkRate === 'number' && x.czkRate > 0 ? x.czkRate : null,
   }

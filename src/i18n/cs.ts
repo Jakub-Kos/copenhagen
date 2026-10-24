@@ -322,4 +322,23 @@ export const cs: Dict = {
   infoSources: 'Zdroje:',
   infoPhrases: 'Pár dánských slov',
   infoPhrasesHint: 'Anglicky mluví skoro každý; „tak“ (díky) ale vždycky potěší.',
+
+  // Reminders
+  remTitle: 'Připomínky',
+  remBook: 'Zarezervujte {place}',
+  remBookDetail: 'na {day} v {time}',
+  remLeave: 'Vyrazte v {time}',
+  remLeaveDetail: '{day} · první zastávka: {place}',
+  remPass: 'Kupte {pass} ({n}×)',
+  remPassDetail: 'Platí od prvního použití: {day} {time} · {place}',
+  remDst: 'V noci se mění čas',
+  remDstBack: 'V noci po {day} se hodiny posunou o hodinu zpět (3:00 → 2:00).',
+  remDstForward: 'V noci po {day} se hodiny posunou o hodinu dopředu (2:00 → 3:00).',
+  remNothing: 'Teď není co vyřizovat.',
+  remAll: 'Všechny připomínky ({n})',
+  remHideAll: 'Zobrazit méně',
+  remMarkDone: 'Hotovo',
+  remCalendar: 'Přidat do kalendáře v telefonu',
+  remCalendarHint: 'Stáhne soubor .ics s programem a upozorněními; otevřete ho a přidejte do kalendáře.',
+  website: 'Web',
 }

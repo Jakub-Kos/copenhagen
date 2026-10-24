@@ -8,6 +8,7 @@ import { LiveRoute, type LiveTarget } from '@/components/LiveRoute'
 import { LunchHint } from '@/components/LunchHint'
 import { ToiletNearby } from '@/components/ToiletNearby'
 import { OfflineCard } from '@/components/OfflineCard'
+import { Reminders } from '@/components/Reminders'
 import { MapView, type MapLine } from '@/components/MapView'
 import { cx } from '@/components/cls'
 import { useTimeline } from '@/components/useTimeline'
@@ -52,6 +53,7 @@ export default function Today() {
     return (
       <div className="mx-auto flex max-w-xl flex-col gap-3 p-4">
         <p>{t('notInTrip', { name: trip.name })}</p>
+        <Reminders trip={trip} />
         {next && (
           <p>
             {t('nextDay', { day: formatDayLong(next, lang) })} –{' '}
@@ -94,6 +96,8 @@ function TodayPlan({ trip, date, nowMin }: { trip: Trip; date: IsoDate; nowMin: 
         <h1 className="text-2xl font-bold first-letter:uppercase">{formatDayLong(date, lang)}</h1>
         {tl.sunset !== null && <p className="text-slate-500 dark:text-slate-400">🌇 {t('sunset', { t: fromMinutes(tl.sunset) })}</p>}
       </div>
+
+      <Reminders trip={trip} />
 
       <WeatherStrip date={date} />
 

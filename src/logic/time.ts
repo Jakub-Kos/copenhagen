@@ -94,3 +94,26 @@ export function formatDuration(min: number): string {
   const rest = m % 60
   return rest ? `${h} h ${rest} min` : `${h} h`
 }
+
+/** The instant of a Copenhagen local date + minutes since midnight (DST-aware). */
+export function cphToUtc(d: IsoDate, minutes: number): Date {
+  const [y, m, day] = d.split('-').map(Number)
+  const wanted = Date.UTC(y, m - 1, day, 0, minutes)
+  // Start from the local time read as UTC and correct by the observed offset (twice, for DST edges).
+  let t = wanted
+  for (let i = 0; i < 2; i++) {
+    const p = cphParts(new Date(t))
+    const [py, pm, pd] = p.date.split('-').map(Number)
+    t -= Date.UTC(py, pm - 1, pd, 0, p.minutes) - wanted
+  }
+  return new Date(t)
+}
+
+/** Minutes the clocks move forward (+60) or back (−60) in the night after `d`; 0 if none. */
+export function dstShiftAfter(d: IsoDate): number {
+  const offset = (x: IsoDate) => {
+    const [y, m, day] = x.split('-').map(Number)
+    return cphParts(new Date(Date.UTC(y, m - 1, day, 12))).minutes - 12 * 60
+  }
+  return offset(addDays(d, 1)) - offset(d)
+}

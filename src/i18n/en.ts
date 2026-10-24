@@ -332,6 +332,25 @@ export const en = {
   infoSources: 'Sources:',
   infoPhrases: 'A few Danish words',
   infoPhrasesHint: 'Almost everyone speaks English; a “tak” (thanks) is always appreciated.',
+
+  // Reminders
+  remTitle: 'Reminders',
+  remBook: 'Book {place}',
+  remBookDetail: 'for {day} at {time}',
+  remLeave: 'Set off at {time}',
+  remLeaveDetail: '{day} · first stop: {place}',
+  remPass: 'Buy {pass} ({n}×)',
+  remPassDetail: 'Valid from first use: {day} {time} · {place}',
+  remDst: 'Clocks change tonight',
+  remDstBack: 'In the night after {day}, clocks go back one hour (3:00 → 2:00).',
+  remDstForward: 'In the night after {day}, clocks go forward one hour (2:00 → 3:00).',
+  remNothing: 'Nothing to do right now.',
+  remAll: 'All reminders ({n})',
+  remHideAll: 'Show fewer',
+  remMarkDone: 'Done',
+  remCalendar: 'Add to the phone calendar',
+  remCalendarHint: 'Downloads an .ics file with the plan and alarms; open it to add it to your calendar.',
+  website: 'Website',
 }
 
 export type Dict = typeof en

@@ -58,6 +58,8 @@ export interface Trip {
   extraCosts: ExtraCost[]
   /** Paid flags of computed cost items (entries, transport), by cost-item key. */
   paid: Record<string, boolean>
+  /** Reminders ticked off, by reminder key (logic/reminders.ts). */
+  done: Record<string, boolean>
   budgetDkk: number | null
   /** Manual DKK→CZK rate; null = use the ECB rate. */
   czkRate: number | null
@@ -89,6 +91,7 @@ export function newTrip(name: string, start: IsoDate, end: IsoDate): Trip {
     days: {},
     extraCosts: [],
     paid: {},
+    done: {},
     budgetDkk: null,
     czkRate: null,
   }
