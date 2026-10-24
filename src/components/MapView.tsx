@@ -4,7 +4,9 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection } from 'geojson'
 import type { LatLng, Place } from '@/data/types'
 import type { HomeBase } from '@/state/tripTypes'
+import { load, save } from '@/state/storage'
 import { KIND_ICON, WEATHER_COLOR } from './kindStyle'
+import { enhanceStyle, highlightLandmarks, setTransitVisible } from './mapStyle'
 
 // OpenFreeMap: free, no key, no request limits; the style carries the OSM/OpenMapTiles attribution.
 const STYLE_LIGHT = 'https://tiles.openfreemap.org/styles/liberty'
@@ -90,6 +92,9 @@ export function MapView({
       onLocRef.current?.({ lat: e.coords.latitude, lng: e.coords.longitude }),
     )
     m.addControl(geo, 'top-right')
+    m.addControl(new TransitToggle(), 'top-right')
+    m.on('style.load', () => enhanceStyle(m, dark, transitOn()))
+    m.on('idle', () => highlightLandmarks(m))
     m.on('load', () => {
       m.addSource('lines', { type: 'geojson', data: linesGeoJson(linesRef.current ?? []) })
       for (const [style, p] of Object.entries(LINE_PAINT)) {
@@ -177,6 +182,40 @@ export function MapView({
   }, [selectedId])
 
   return <div ref={container} className={className} />
+}
+
+const transitOn = () => load<boolean>('mapTransit', (x) => (typeof x === 'boolean' ? x : null)) ?? true
+
+/** Map button that shows/hides the public-transport layer; the choice is remembered. */
+class TransitToggle implements maplibregl.IControl {
+  private el: HTMLDivElement | null = null
+
+  onAdd(map: maplibregl.Map) {
+    const el = document.createElement('div')
+    el.className = 'maplibregl-ctrl maplibregl-ctrl-group'
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.textContent = '🚇'
+    btn.title = 'Metro / S-tog'
+    const paint = (on: boolean) => {
+      btn.setAttribute('aria-pressed', String(on))
+      btn.style.opacity = on ? '1' : '0.45'
+    }
+    paint(transitOn())
+    btn.addEventListener('click', () => {
+      const on = !transitOn()
+      save('mapTransit', on)
+      setTransitVisible(map, on)
+      paint(on)
+    })
+    el.appendChild(btn)
+    this.el = el
+    return el
+  }
+
+  onRemove() {
+    this.el?.remove()
+  }
 }
 
 function linesGeoJson(lines: MapLine[]): FeatureCollection {

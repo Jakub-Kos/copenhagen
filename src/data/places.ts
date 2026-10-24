@@ -170,9 +170,19 @@ export const places: Place[] = [
     durationMax: 60,
     weather: 'covered',
     windSensitive: false,
-    openingHours: { regular: daily('10:00', '20:00') },
+    openingHours: {
+      regular: daily('10:00', '20:00'),
+      seasonal: [
+        {
+          from: '10-01',
+          to: '03-31',
+          hours: { ...daily('10:00', '18:00'), mon: r('10:00', '21:00'), tue: r('10:00', '21:00') },
+          label: { cs: 'zimní sezóna', en: 'winter season' },
+        },
+      ],
+    },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'moderate',
     bestTime: ['afternoon'],
     description: {
@@ -261,7 +271,7 @@ export const places: Place[] = [
     weather: 'outdoor',
     windSensitive: false,
     openingHours: {
-      // Closed between seasons; Halloween season runs roughly mid-Oct to early Nov.
+      // Closed between seasons. Halloween 2026: 2 Oct – 1 Nov (tivoli.dk); daily hours still to verify.
       regular: {
         mon: null,
         tue: null,
@@ -273,8 +283,8 @@ export const places: Place[] = [
       },
       seasonal: [
         {
-          from: '10-09',
-          to: '11-08',
+          from: '10-02',
+          to: '11-01',
           hours: daily('11:00', '22:00'),
           label: { cs: 'Halloween v Tivoli', en: 'Halloween in Tivoli' },
         },
@@ -333,9 +343,9 @@ export const places: Place[] = [
     durationMax: 180,
     weather: 'indoor',
     windSensitive: false,
-    openingHours: { regular: closedMon('10:00', '18:00') },
+    openingHours: { regular: daily('10:00', '17:00') },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'easy',
     bestTime: ['morning', 'afternoon'],
     description: {
@@ -385,7 +395,7 @@ export const places: Place[] = [
     windSensitive: false,
     openingHours: { regular: closedMon('10:00', '18:00', { thu: r('10:00', '20:00') }) },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'easy',
     bestTime: ['morning', 'afternoon'],
     description: {
@@ -408,7 +418,7 @@ export const places: Place[] = [
     windSensitive: false,
     openingHours: { regular: closedMon('10:00', '17:00') },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'easy',
     bestTime: ['morning', 'afternoon'],
     description: {
@@ -653,9 +663,12 @@ export const places: Place[] = [
     durationMax: 60,
     weather: 'outdoor',
     windSensitive: true,
-    openingHours: { regular: daily('10:00', '16:00') },
+    openingHours: {
+      regular: daily('09:00', '20:00'),
+      seasonal: [{ from: '01-01', to: '01-31', hours: { mon: null, tue: null, wed: null, thu: null, fri: null, sat: null, sun: null } }],
+    },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'hard',
     bestTime: ['daylight-only'],
     description: {
@@ -1048,7 +1061,7 @@ export const places: Place[] = [
       regular: closedMon('11:00', '22:00', { sat: r('11:00', '18:00'), sun: r('11:00', '18:00') }),
     },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'easy',
     bestTime: ['morning', 'afternoon'],
     description: {
@@ -1074,8 +1087,8 @@ export const places: Place[] = [
     weather: 'indoor',
     windSensitive: false,
     openingHours: {
-      regular: closedMon('11:00', '16:00'),
-      seasonal: [{ from: '04-01', to: '10-31', hours: daily('10:00', '17:00') }],
+      regular: closedMon('10:00', '16:00'),
+      seasonal: [{ from: '03-28', to: '10-31', hours: daily('10:00', '17:00') }],
     },
     bookingNeeded: false,
     verifyHours: true,
@@ -1103,12 +1116,9 @@ export const places: Place[] = [
     durationMax: 240,
     weather: 'indoor',
     windSensitive: false,
-    openingHours: {
-      regular: daily('11:00', '15:00'),
-      seasonal: [{ from: '04-01', to: '10-31', hours: daily('10:00', '17:00') }],
-    },
+    openingHours: { regular: daily('10:00', '17:00') },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'moderate',
     bestTime: ['morning', 'afternoon'],
     description: {
@@ -1135,10 +1145,10 @@ export const places: Place[] = [
     windSensitive: false,
     openingHours: {
       regular: daily('10:00', '16:00'),
-      seasonal: [{ from: '06-01', to: '08-31', hours: daily('10:00', '17:00') }],
+      seasonal: [{ from: '05-01', to: '10-18', hours: daily('10:00', '17:00') }],
     },
     bookingNeeded: false,
-    verifyHours: true,
+    verifyHours: false,
     effort: 'easy',
     bestTime: ['morning', 'afternoon'],
     description: {
